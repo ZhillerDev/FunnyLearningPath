@@ -1,22 +1,17 @@
----
-title: Vue3新特性全家桶
-date: 2022-06-14 19:21:58
-tags:
-
-categories:
-  - 前端
----
-
 ### 三大常用 ref 介绍
+
+#### 标准 ref()
 
 ref 用来定义响应式数据，注意这里使用按需导入，留意导入了什么！
 
 1. ref != Ref，我们用 Ref 指定类型，而 ref 是构造对象的
-2. 定义格式：const xxx = ref(info) ,info 即定义值，可以是单个值或者一个对象（不能单个值和单个对象并列写在一起）
-3. （以下方代码为例）调用时 message.value 表示 ref 圆括号这一层定义的值  
-   message.value.tags 表示当 ref 接收一个对象时的对象内参数
-4. ref 具有响应特性，即 changeTag 方法修改 ref 内部的值后，与该值绑定或是用插值语法调用的标签内容会同时发生变化
-5. ref 忽略嵌套深度，也就是说 ref 接受的对象无论嵌套多少层对象都具有响应式特性
+2. ref 被传递给函数或是从一般对象上被解构时，不会丢失响应性
+3. ref() 定义的值必须通过 xxx.value 的方式取出来，直接使用的话他会返回一个 ref 对象！
+4. ref 一样具有响应特性
+5. ref 忽略嵌套深度
+6. ref 在模板中使用时会自动解包，即无需使用 `.value` 取出值
+
+> ref() 允许我们创建可以使用任何值类型的响应式 ref
 
 ```html
 <script setup lang="ts">
@@ -31,20 +26,33 @@ ref 用来定义响应式数据，注意这里使用按需导入，留意导入�
 
 <template>
   <div>
+    <!-- 自动解包 -->
     <div>{{ message }}</div>
+
+    <!-- 点击相应 -->
     <button @click="changeTag">点击换名</button>
   </div>
 </template>
 ```
 
+reactive 接收一个 ref 类型的定义的数组或者 map，依然需要使用 value 取值
+
+```js
+const books = reactive([ref("Vue 3 Guide")]);
+// 这里需要 .value
+console.log(books[0].value);
+```
+
 <br>
 
-**shallowRef**
+#### shallowRef
+
 适用方法和 ref 一致，但他响应特性的波及范围只是 xxx.value 这一层，更深层的就不具有响应特性！
 
 <br>
 
-**triggerRef**
+#### triggerRef
+
 配合 shallowRef 一起使用；  
 可以使用 triggerRef(xxx)强制使括号内属性进行同步（即触发一次响应）
 
@@ -93,6 +101,8 @@ const changeTag = () => {
 <br>
 
 ### Reactive
+
+#### 基本使用
 
 Reactive 同样也是解决响应式问题，相关规定如下：
 
@@ -164,6 +174,22 @@ Reactive 同样也是解决响应式问题，相关规定如下：
     <button @click="changeDeepen">{{sr.deep.deepname}}</button>
   </div>
 </template>
+```
+
+<br>
+
+#### 代理与原值
+
+reactive 指定一个现存的变量，即可将其变成 `响应式代理类型`
+
+修改 `原值` 不会改变响应式代理的值
+
+```js
+const raw = {};
+const proxy = reactive(raw);
+
+// 代理对象和原始对象不是全等的
+console.log(proxy === raw); // false
 ```
 
 <br>

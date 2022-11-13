@@ -69,6 +69,55 @@ const changeTag = () => {
 
 <br>
 
+#### toRef
+
+定义：将对象转变为 ref 的引用；
+
+- 格式 toRef(a,'b')其中 a 表示欲转换的对象，b 则为需要被赋予响应性质的属性
+- toRef 后就把对象变成了 ref 对象，此时可以通过 value 获取对应值了
+- toRef 接收的第一个参数可以是一个普通的对象，也可以是 reactive 对象
+- （根据下方代码）因 foo 没有被纳入，所以转换后的 ref 对象内它不具有响应式特性
+
+```html
+<script setup lang="ts">
+  import { toRef } from "vue";
+  const obj = {
+    foo: 1,
+    boo: 2,
+  };
+  const state = toRef(obj, "boo");
+  const change = () => {
+    state.value++;
+  };
+</script>
+```
+
+<br>
+
+#### toRefs
+
+基本功效和 toRef 一样，只不过这里使用解构的思想，让原对象内的属性转换为 ref 对象后各自使用；  
+如下代码将原 obj 对象内两个属性 foo boo 直接转变为 ref 对象来使用！
+
+```html
+<script setup lang="ts">
+  import { toRefs, reactive } from "vue";
+  let obj = reactive({
+    foo: 1,
+    boo: 2,
+  });
+  let { foo, boo } = toRefs(obj);
+  const change = () => {
+    foo.value++;
+    boo.value++;
+  };
+</script>
+```
+
+> 还有一个 toRaw()方法，它的作用是把响应式对象（如 reactive）变回原始对象
+
+<br>
+
 ### customRef 自定义
 
 自定义 ref，需要首先到 vue 里面按需引入；
@@ -194,52 +243,120 @@ console.log(proxy === raw); // false
 
 <br>
 
-### toRef
+### computed 计算属性
 
-定义：将对象转变为 ref 的引用；
+#### 基本用法
 
-- 格式 toRef(a,'b')其中 a 表示欲转换的对象，b 则为需要被赋予响应性质的属性
-- toRef 后就把对象变成了 ref 对象，此时可以通过 value 获取对应值了
-- toRef 接收的第一个参数可以是一个普通的对象，也可以是 reactive 对象
-- （根据下方代码）因 foo 没有被纳入，所以转换后的 ref 对象内它不具有响应式特性
+使用方式和 vue2 一致，只不过不再单独划分为一个模块，而是整合到一个变量中去使用了
+
+计算属性优点：
+
+1. 计算属性值会基于其响应式依赖被缓存
+2. 只要原值不变，计算属性都会取出之前计算好的缓存数据并返回，不额外重复计算
 
 ```html
-<script setup lang="ts">
-  import { toRef } from "vue";
-  const obj = {
-    foo: 1,
-    boo: 2,
-  };
-  const state = toRef(obj, "boo");
-  const change = () => {
-    state.value++;
-  };
+<script setup>
+  import { reactive, computed } from "vue";
+
+  const author = reactive({
+    name: "tom",
+  });
+
+  // 标准计算属性，使用return返回计算结果
+  const getName = computed(() => {
+    return author.name == "tom" ? "Yes" : "No";
+  });
 </script>
+
+<template>
+  <!-- 输出yes -->
+  <span>{{ getName }}</span>
+</template>
 ```
 
 <br>
 
-### toRefs
-
-基本功效和 toRef 一样，只不过这里使用解构的思想，让原对象内的属性转换为 ref 对象后各自使用；  
-如下代码将原 obj 对象内两个属性 foo boo 直接转变为 ref 对象来使用！
+计算属性默认只读，除非你自定义 `getter\setter`  
+再对计算属性使用 `setter` 时，固定语法为 `xxx.value = xxx`
 
 ```html
-<script setup lang="ts">
-  import { toRefs, reactive } from "vue";
-  let obj = reactive({
-    foo: 1,
-    boo: 2,
+<script setup>
+  import { reactive, computed } from "vue";
+
+  const author = reactive({
+    name: "tom",
   });
-  let { foo, boo } = toRefs(obj);
-  const change = () => {
-    foo.value++;
-    boo.value++;
-  };
+
+  // 为计算属性设置getter，setter
+  const demo = computed({
+    get() {
+      return 1;
+    },
+    set(val) {
+      author.name = val;
+    },
+  });
+
+  // 调用计算属性的setter
+  demo.value = 100;
 </script>
+
+<template>
+  <!-- 输出100 -->
+  <span>{{ author.name }}</span>
+</template>
 ```
 
-> 还有一个 toRaw()方法，它的作用是把响应式对象（如 reactive）变回原始对象
+<br>
+
+#### 与样式绑定结合
+
+`ref + computed + :class` 可以快速实现样式的动态增删
+
+```js
+const isActive = ref(true);
+const error = ref(null);
+
+const classObject = computed(() => ({
+  active: isActive.value,
+  "text-danger": error.value,
+}));
+
+// 调用时：
+// <div :class="classObject"></div>
+```
+
+<br>
+
+### 样式绑定
+
+当子组件有且仅有一个根节点时，我们直接传入的 class 属性就会应用到该根结点上
+
+```html
+<!-- 父组件使用class给子组件传值 -->
+<MyComponent class="baz boo" />
+
+<!-- 子组件被渲染时自动获取父组件传来的值并注入class属性内 -->
+<p class="baz boo">Hi!</p>
+```
+
+当子组件有多个节点时，显式使用 `$attrs` 获取传入的 class
+
+```html
+<p :class="$attrs.class">Hi!</p>
+<span>This is a child component</span>
+```
+
+<br>
+
+或者直接使用数组绑定
+
+```js
+const activeClass = ref('active')
+const errorClass = ref('text-danger')
+
+<div :class="[activeClass, errorClass]"></div>
+```
 
 <br>
 
@@ -293,7 +410,7 @@ console.log(proxy === raw); // false
 
 <br>
 
-### watchEffect 多属性监听
+#### watchEffect 多属性监听
 
 不同于 watch，它采用监听对象和监听方法相结合的形式；
 
@@ -330,6 +447,32 @@ console.log(proxy === raw); // false
 
   const stopWatch = () => wc(); // 停止监听
 </script>
+```
+
+<br>
+
+#### 模板引用
+
+用法和 vue2 的 ref 差不多，只不过 vue2 的格式是 `this.$xxx.xxx`
+
+使用 ref，我们就可以直接操作 DOM 了
+
+```html
+<script setup>
+  import { ref, onMounted } from "vue";
+
+  // 属性名称必须和ref定义的名称完全一致
+  const demo = ref(null);
+
+  // 你只能在实例创建完毕后才可以使用ref
+  onMounted(() => {
+    demo.value.focus();
+  });
+</script>
+
+<template>
+  <input ref="demo" />
+</template>
 ```
 
 <br>

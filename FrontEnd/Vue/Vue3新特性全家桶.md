@@ -720,6 +720,53 @@ createApp(App)
 
 <br>
 
+### 透传属性
+
+> 官方原话：“透传 attribute”指的是传递给一个组件，却没有被该组件声明为 props 或 emits 的 attribute 或者 v-on 事件监听器
+
+如果要关闭透传特性，在组合式写法中必须要新开一个 script 标签来进行配置
+
+```html
+<script>
+  // 使用普通的 <script> 来声明选项
+  export default {
+    inheritAttrs: false,
+  };
+</script>
+
+<script setup>
+  // ...setup 部分逻辑
+</script>
+```
+
+但是禁用不代表不接收，子组件依然可以收到父组件透传的属性，只是会全部存放到 `$attrs` 里面而不会直接绑定到标签上  
+譬如`<span>Fallthrough attribute: {{ $attrs }}</span>`
+
+<br>
+
+透传完全遵循大小写原则，即父组件传入的属性名为 `the-name` 子组件接收也必须完全按照该格式！
+
+多根节点需要使用 v-bind 显式绑定
+
+```html
+<header>...</header>
+<main v-bind="$attrs">...</main>
+<footer>...</footer>
+```
+
+<br>
+
+js 也可以直接调用透传属性
+
+```html
+<script setup>
+  import { useAttrs } from "vue";
+  const attrs = useAttrs();
+</script>
+```
+
+<br>
+
 ### 动态组件
 
 非常重要！！！可以取代理由实现静态更新的一个方法！
@@ -807,6 +854,8 @@ createApp(App)
 
 ### teleport 传送
 
+#### 具名插槽
+
 组件 template 标签内定义 teleport 标签，之后该标签将被插入到 vite 根目录下的 index.html 内；  
 to=""中写一个选择器，譬如写 .container 则表示插入到 index.html 内具有该 class 的标签的内部！！！
 
@@ -818,6 +867,53 @@ to=""中写一个选择器，譬如写 .container 则表示插入到 index.html 
     </teleport>
   </div>
 </template>
+```
+
+<br>
+
+#### 插槽属性传递
+
+类似 props 传递，只是更加简单而不需要 defineProps
+
+```html
+<!-- 子组件模板 -->
+<div>
+  <slot :text="greetingMessage" :count="1"></slot>
+</div>
+
+<!-- 父组件模板 -->
+<MyComponent v-slot="slotProps">
+  {{ slotProps.text }} {{ slotProps.count }}
+</MyComponent>
+```
+
+<br>
+
+### 插槽列表渲染示例
+
+代码解释
+
+1. 父组件使用具名插槽，指定使用 item 插槽
+2. 调用透传属性，获取属性
+3. 插槽传值，执行渲染
+
+```html
+<!-- 父组件 -->
+<FancyList :api-url="url" :per-page="10">
+  <template #item="{ body, username, likes }">
+    <div class="item">
+      <p>{{ body }}</p>
+      <p>by {{ username }} | {{ likes }} likes</p>
+    </div>
+  </template>
+</FancyList>
+
+<!-- 子组件 -->
+<ul>
+  <li v-for="item in items">
+    <slot name="item" v-bind="item"></slot>
+  </li>
+</ul>
 ```
 
 <br>

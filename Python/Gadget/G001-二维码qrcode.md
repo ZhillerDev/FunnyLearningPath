@@ -27,3 +27,5 @@ qrcode.make("helloworld").save(sys.path[0] + "/save.jpg")
 <br>
 
 ### 实操案例
+
+

@@ -14,7 +14,7 @@
 
 我们在内置浏览器开启 pikachu 对应页面，此时所有的网络活动都被 burp 监听
 
-![](../imgs/tools/t02/t02-1.png)
+![](../../imgs/tools/t02/t02-1.png)
 
 <br>
 
@@ -24,7 +24,7 @@
 
 此刻在 burp 面板就出现了我们刚刚执行的 submit 操作，他的请求方式为 POST，即表单提交；
 
-![](../imgs/tools/t02/t02-2.png)
+![](../../imgs/tools/t02/t02-2.png)
 
 右键点击该 POST 请求，选择 `“send intruder”`
 
@@ -40,7 +40,7 @@
 1. sniper：即你设置的所有变量都同时使用一个字典
 2. pitch fork：你可以设置 N 多个变量，并为这些变量分别制定各自独立的字典
 
-![](../imgs/tools/t02/t02-3.png)
+![](../../imgs/tools/t02/t02-3.png)
 
 <br>
 
@@ -50,7 +50,7 @@
 
 再选中请求体最下面的 username 和 password 后面的值，点击 `add $` ，把它们都变成变量！
 
-![](../imgs/tools/t02/t02-4.png)
+![](../../imgs/tools/t02/t02-4.png)
 
 <br>
 
@@ -64,7 +64,7 @@
 2. payload options 为负载添加字典
 3. payload processing 为字典添加特定编码
 
-![](../imgs/tools/t02/t02-5.png)
+![](../../imgs/tools/t02/t02-5.png)
 
 <br>
 
@@ -80,6 +80,6 @@
 
 攻击结果如下，可见，当我们使用正确的用户名以及密码进行配对后，返回的长度（length）和其他请求失败的 request 是不一样的！我们即可根据此特性找到对应的用户名以及密码
 
-![](../imgs/tools/t02/t02-6.png)
+![](../../imgs/tools/t02/t02-6.png)
 
 <br>

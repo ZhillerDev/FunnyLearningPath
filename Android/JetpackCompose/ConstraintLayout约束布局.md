@@ -151,3 +151,41 @@ fun DecoupleConstraintsLayout() {
 ```
 
 <br>
+
+### 链接约束
+
+使用链接约束可以快速的设置指定组件的布局规则：
+
+`createVerticalChain` 用来对指定组件设置对应的布局规则
+
+`chainStyle = ChainStyle.Spread` 表示设置布局约束为平均分布
+
+```kotlin
+@Composable
+fun card() {
+    ConstraintLayout {
+        // 创建两个组件的引用
+        val (headerRef, bottomRef) = createRefs()
+        // 使用链接约束
+        // chainStyle = ChainStyle.Spread 设置指定组件的布局规则为平均分布
+        createVerticalChain(headerRef, bottomRef, chainStyle = ChainStyle.Spread)
+        Text(text = "helloworld",
+            modifier = Modifier
+                .wrapContentSize()
+                .constrainAs(headerRef) {
+                    linkTo(start = parent.start, end = parent.end)
+                })
+        Text(text = "and kotlin",
+            modifier = Modifier
+                .wrapContentSize()
+                .constrainAs(bottomRef) {
+                    linkTo(start = parent.start, end = parent.end)
+                })
+    }
+}
+
+```
+
+成果图：
+
+![](../imgs/compose/constraintlayout/cl2.png)

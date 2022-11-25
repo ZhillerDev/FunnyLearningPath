@@ -149,4 +149,6 @@ fun mainBody() {
 
 ```
 
+![](../imgs/compose/scaffold/sc2.png)
+
 <br>

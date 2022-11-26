@@ -152,3 +152,48 @@ fun mainBody() {
 ![](../imgs/compose/scaffold/sc2.png)
 
 <br>
+
+### 侧边抽屉 drawer
+
+#### 监听抽屉布局返回事件
+
+一般的，我们打开左侧抽屉后，单击返回键就会关闭抽屉而非退出 app
+
+这里需要记录 scaffold 的抽屉状态并利用 backhandler 组件监听返回事件
+
+`scaffoldState` 记录 scaffold 状态  
+`scope` 协程作用域，处理挂起的函数
+
+`BackHandler` 这是专门处理 compose 返回操作的监听组件，我们在这里处理关闭抽屉的方法
+
+```kotlin
+@Composable
+fun drawerDemo() {
+    // 记录对应的状态
+    val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        // 创建一个简单的抽屉
+        drawerContent = {
+            Text(text = "抽屉")
+        },
+        // 这里将scaffold的状态存储起来
+        scaffoldState = scaffoldState
+    ) {
+    }
+
+    // 返回键监听
+    BackHandler(
+        // 监听开始的条件是：抽屉被打开
+        enabled = scaffoldState.drawerState.isOpen
+    ) {
+        // 此时若点击了返回键，则使用协程scope关掉高抽屉
+        scope.launch {
+            scaffoldState.drawerState.close()
+        }
+    }
+}
+```
+
+<br>

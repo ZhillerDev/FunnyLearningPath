@@ -94,4 +94,44 @@ fun demo(){
 
 <br>
 
-#### 异步处理副作用
+#### rememberCoroutineScope
+
+用于在非 `composable` 环境下使用协程，譬如在 `button` 的 `onclick` 方法内部！
+
+```kotlin
+@Composable
+fun CoroutineDemo(scaffoldState: ScaffoldState = rememberScaffoldState()) {
+    val scope = rememberCoroutineScope()
+    Scaffold(scaffoldState = scaffoldState) {
+        Column {
+            Button(onClick = {
+                // 调用协程改变状态，显示snackbar
+                scope.launch {
+                    scaffoldState.snackbarHostState.showSnackbar("give it up")
+                }
+            }) {
+                Text(text = "press me!!!")
+            }
+        }
+    }
+}
+```
+
+<br>
+
+#### rememberUpdatedState
+
+开启一个协程，并且在重组过程中协程不中断，而是持续获取最新状态；
+
+LaunchedEffect 会在他的 key 发送变化时启动协程
+
+```kotlin
+@Composable
+fun ScreenDemo(onTimeout: () -> Unit) {
+    val currentTimeout by rememberUpdatedState(newValue = onTimeout)
+    LaunchedEffect(key1 = Unit) {
+        delay(1000)
+        currentTimeout()
+    }
+}
+```

@@ -61,3 +61,16 @@ fun RedDot() {
 ```
 
 <br>
+
+### 尺寸
+
+#### 像素转换
+
+将 DP 转换为 PX
+
+```kotlin
+var blockSize = 48.dp
+var blockSizePx = with(LocalDensity.current) { blockSize.toPx() }
+```
+
+<br>

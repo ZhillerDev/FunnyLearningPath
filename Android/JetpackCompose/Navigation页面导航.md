@@ -204,8 +204,94 @@ private fun body(navController: NavController) {
 
 <br>
 
-### 进阶扩展
+### 带参传递
 
-> 基础篇请仔细看，否则不掌握整个结构是没法理解 navigation 逻辑的！
+> 目前 compose 还不支持传入对象作为参数！
+
+<br>
+
+#### 简单双参数
+
+根目录下新建文件夹 entity，新建单例类 ContentType 作为数据类存储位置
+
+新增数据类 DemoContent，这表示我们需要传入的两个参数，后面带问号判空
+
+```kotlin
+object ContentType {
+    data class DemoContent(
+        val id: Int?,
+        val content: String?
+    )
+}
+```
+
+<br>
+
+本案例承接上一节案例；
+
+修改 demo1，将其改写成类的形式，body 方法内容保持不变
+
+```kotlin
+class Demo1(
+    var navController: NavController,
+    // 接收数据类
+    var content: ContentType.DemoContent
+) {
+    @Composable
+    fun init() {
+        body()
+    }
+
+    @Composable
+    private fun body() {
+        ...
+    }
+}
+```
+
+<br>
+
+修改 mainnav 中的 demo1 路由
+
+定义参数的三个步骤：
+
+1. 路由路径内使用花括号包裹参数名称（类似于 springboot）
+2. 必须为所有参数给予一个 NavType！！！
+3. 将参数传递给指定 composable 组件
+
+```kotlin
+composable(
+    // path中指定了两个参数，前者为int类型，后者为string类型
+    "${RouteConfig.ROUTE_DEMO1}/{id}/{content}",
+    // 使用列表注册所有的参数并且添加对应类型
+    arguments = listOf(
+        navArgument("id") { type = NavType.IntType },
+        navArgument("content") { type = NavType.StringType }
+    )
+) { navBackStackEntry ->
+
+    // navBackStackEntry保存传入的参数，我们通过其获取值并传递
+    Demo1(
+        navController, ContentType.DemoContent(
+            navBackStackEntry.arguments?.getInt("id"),
+            navBackStackEntry.arguments?.getString("content")
+        )
+    ).init()
+}
+```
+
+<br>
+
+demo2 启动参数修改
+
+非常简单，仅需要使用 ${} 的形式填充入 path 即可传递值
+
+```kotlin
+Button(onClick = {
+    navController.navigate("${RouteConfig.ROUTE_DEMO1}/${1}/${"damn"}")
+}) {
+    ...
+}
+```
 
 <br>

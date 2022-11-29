@@ -2,6 +2,8 @@
 
 > 约束结构原理：将一个组件与约束布局关联后，通过 modifier 来指定组件位置
 
+<br>
+
 #### 导入 compose 约束布局包
 
 打开 `build.gradle(:app)` 文件

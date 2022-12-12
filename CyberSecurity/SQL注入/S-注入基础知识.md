@@ -85,3 +85,32 @@ concat_ws(spet,str1,str2)，spet 为分隔符，使用 16 进制表示，str1 �
 <br>
 
 ####
+
+### 回显错误
+
+#### updatexml
+
+> 原理：构造一个错误的 XPATH 代码，代码内写我们要查询的东西，SQL 校验错误后会直接回显结果，通关报错拿到信息
+
+这是关于 updatexml 的官方解释
+
+```
+updatexml (XML_document, XPath_string, new_value);
+第一个参数：XML_document是String格式，为XML文档对象的名称
+第二个参数：XPath_string (Xpath格式的字符串)
+第三个参数：new_value，String格式，替换查找到的符合条件的数据
+```
+
+<br>
+
+实际上，第一个和第三个参数可以乱写，我们只需要使第二个参数不符合 XPATH 格式就完毕了！
+
+使用 concat 把一个波浪接到查询代码前面，使得该 XPATH 不符合格式  
+`updatexml(666,concat('~',(select user())),'good luck')`
+
+注入后，SQL 校验出错，返回报错信息，同时执行了我们想要的查询代码 `select user()`  
+结果：`XPATH syntax error: '~sqli@localhost'`
+
+<br>
+
+### 盲注

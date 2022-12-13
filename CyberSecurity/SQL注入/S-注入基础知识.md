@@ -92,7 +92,7 @@ concat_ws(spet,str1,str2)，spet 为分隔符，使用 16 进制表示，str1 �
 
 > 原理：构造一个错误的 XPATH 代码，代码内写我们要查询的东西，SQL 校验错误后会直接回显结果，通关报错拿到信息
 
-这是关于 updatexml 的官方解释
+这是关于 `updatexml` 的官方解释
 
 ```
 updatexml (XML_document, XPath_string, new_value);

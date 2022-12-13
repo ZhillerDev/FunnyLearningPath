@@ -85,3 +85,11 @@ low 级别下没有任何检测，什么文件都可以上传，直接上传一�
 ![](../imgs/target/dvwa/dv7.png)
 
 <br>
+
+#### XSS
+
+low 模式下前端不设防，后端也无任何过滤处理，直接在 URL 的参数 default 注入 js 代码：
+
+`http://localhost:8080/dvwa/vulnerabilities/xss_d/?default=<script>alert('infomation');</script>`
+
+<br>

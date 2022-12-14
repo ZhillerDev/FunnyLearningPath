@@ -92,4 +92,6 @@ low 模式下前端不设防，后端也无任何过滤处理，直接在 URL �
 
 `http://localhost:8080/dvwa/vulnerabilities/xss_d/?default=<script>alert('infomation');</script>`
 
+1
+
 <br>

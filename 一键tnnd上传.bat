@@ -7,10 +7,10 @@ title fukin push
 
 echo =================
 echo =  welcome  !!!
-echo = press "enter" to upload 
+echo = press "asd" to upload 
 echo =================
 
-set /p inp=ok,just press enter here!!!
+set /p inp=your choice:
 if "%inp%"=="asd"  (
 git add .
 git commit -m "push now!"
@@ -20,6 +20,8 @@ echo+
 echo ---new round---
 echo+
 echo+
+) else (
+cls
 )
 
 goto backhome

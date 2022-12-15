@@ -8,6 +8,7 @@ title fukin push
 echo =================
 echo =  welcome  !!!
 echo = press "asd" to upload 
+echo = press any keys to cls
 echo =================
 
 set /p inp=your choice:

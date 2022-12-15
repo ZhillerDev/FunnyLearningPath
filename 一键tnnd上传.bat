@@ -11,7 +11,7 @@ echo = press "enter" to upload
 echo =================
 
 set /p inp=ok,just press enter here!!!
-if "%inp%"=="" （
+if "%inp%"=="asd"  (
 git add .
 git commit -m "push now!"
 git push

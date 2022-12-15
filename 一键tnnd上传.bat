@@ -1,6 +1,7 @@
 @echo off
 echo =================
 echo =  welcome  =
+echo 
 echo =================
 :backhome
 set /p inp=input "asd" and I will upload al your files:
@@ -9,5 +10,5 @@ git add .
 git commit -m "push now!"
 git push
 )
-else goto backhome
+goto backhome
 pause

@@ -368,4 +368,30 @@ bingo!成功取得所有数据
 
 **水平越权**
 
+按照提示内容，输入账户密码并查看详细信息；
+
+修改 URL 中的 username 字段，回车运行，发现查找到了另外的（平级）用户，则存在水平越权  
+`http://localhost:8080/pikachu/vul/overpermission/op1/op1_mem.php?username=lili&submit=%E7%82%B9%E5%87%BB%E6%9F%A5%E7%9C%8B%E4%B8%AA%E4%BA%BA%E4%BF%A1%E6%81%AF#`
+
 <br>
+
+**垂直越权**
+
+即低级别用户使用高级别用户的权限乱搞
+
+首先进入超管 admin 账户，点击添加用户，burp 抓包，获得添加用户的请求，把他发送到 repeater 里面去；  
+之后 drop 掉该添加用户的请求！！
+
+此时退出超管账户；
+
+进入普通用户账户，burp 抓到该用户的 PHPSESSION  
+回到 repeater，修改添加用户请求的 PHPSESSION 为普通用户的，此时表示以普通用户的身份去执行超管的添加用户的操作！  
+填写完毕后直接 send；
+
+此时再刷新一下，发现用户添加成功，表示存在垂直越权！
+
+![](../imgs/target/pikachu/pk12.png)
+
+<br>
+
+### 反序列化

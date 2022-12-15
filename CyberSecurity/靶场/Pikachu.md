@@ -330,3 +330,23 @@ bingo!成功取得所有数据
 <br>
 
 **httpheader 注入**
+
+为了图省事，后端可能会根据前端传过来的 header 进行 SQL 查询；
+
+譬如我抓取到了 header，对其中的 user-agent 使用 SQL 注入；
+
+这次玩点新花样，使用 `extractvalue(0,concat('~',database()))` 来构造 XML 异常；
+
+在 repeater 里面直接 send，response 翻到最底部就可以看见报错了！
+
+![](../imgs/target/pikachu/pk10.png)
+
+<br>
+
+**布尔盲注与时间盲注**
+
+不做介绍，请移步上级目录下的 SQL 注入模块内查询专题文章
+
+> 真不是懒，是真的懒
+
+<br>

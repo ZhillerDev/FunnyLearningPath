@@ -27,11 +27,53 @@ linux：ELF(executable and linkable format)可执行文件
 
 <br>
 
-#### 汇编速通
+### 第 7 章 Crypto
+
+#### Base64
+
+1. 基于 64 个可打印字符来表示二进制数据的表示方法
+2. 每 6bit 为一个单元，对应某个可打印字符
+3. Base64 中，可打印字符包括字母 A ～ Z、a ～ z 和数字 0 ～ 9，共 62 个字符，以及+、/字符
+4. 3byte=24bit，对应 4 个 Base64 单元，即 3byte 任意二进制数据可由 4 个可打印字符来表示
 
 <br>
 
-### 第 11 章 AWD 线下赛
+#### uuencode
+
+将输入字符以每 3 字节为单位进行编码，如此重复。如果最后剩下的字符少于 3 字节，不足部分用 0 补齐
+
+> xxencode 与 Base64 类似，只不过使用的转换表不同
+
+<br>
+
+#### 分组密码
+
+> 你又不学密码学，看这玩意干嘛，过一下关键名词和基本概念就拉倒算了
+
+**ECB（Electronic Code Book，电子密码本）**  
+明文的每个块都独立地加密成密文的每个块
+
+**CBC（Cipher Block Chaining，密码分组链接）**  
+每个明文块先与前一个密文块进行异或（XOR）后再进行加密
+
+**OFB（Output FeedBack，输出反馈模式）**  
+将之前一次的加密结果使用密钥再次进行加密（第 1 次对 IV 进行加密），产生的块作为密钥流，然后将其与明文块进行异或，得到密文
+
+**CTR 模式（Counter Mode，CM）**  
+将块密码变为流密码，通过递增一个加密计数器来产生连续的密钥流
+
+**费斯妥密码（Feistel Cipher）**  
+用于构造分组密码的对称结构
+
+**DES（Data Encryption Standard，数据加密标准）**  
+一种典型的基于 Feistel 结构的加密算法
+
+**AES（Advanced Encryption Standard）**  
+AES 的加密过程是在一个 4×4 字节大小的矩阵上运作的
+
+<br>
+
+### 第 10 章 代码审计
 
 <br>
 

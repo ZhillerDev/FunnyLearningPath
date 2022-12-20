@@ -10,6 +10,25 @@ XposedHook：不修改源码的情况下影响程序运行的 androidhook 框架
 
 ### 第 5 章 逆向工程
 
+#### 逆向基础
+
+可执行文件的形成过程：
+
+1. 编译器解析高级语言编写的源代码
+2. 产生汇编代码
+3. 汇编转换的机器码保存到多个对象文件
+4. 链接器链接对象文件形成可执行文件
+
+<br>
+
+俩大系统的可执行文件格式  
+windows：PE(portable executable)可执行文件  
+linux：ELF(executable and linkable format)可执行文件
+
+<br>
+
+#### 汇编速通
+
 <br>
 
 ### 第 11 章 AWD 线下赛

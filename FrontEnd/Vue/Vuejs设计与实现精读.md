@@ -217,3 +217,270 @@ function effect() {
 
 **调度执行**
 为了保证在 vuejs 内连续调用多次响应式数据但仅触发一次更新，vuejs 内部实现了一个完善的调度器
+
+<br>
+
+#### 非原始值的响应式方案
+
+**代理 proxy**
+
+代理仅能拦截对对象的基本操作（getter、setter）  
+但是 obj.fn()属于复合操作，因为它 get 了两次
+
+下方使用 proxy+apply 拦截，最终输出结果为 `let me think`
+
+```js
+const fn = (name) => {
+  console.log("let me " + name);
+};
+
+const pp = new Proxy(fn, {
+  apply(target, thisArg, arg) {
+    target.call(thisArg, ...arg);
+  },
+});
+
+pp("think");
+```
+
+<br>
+
+**反射 reflect**
+
+反射还可接收第三个参数，来表示 this，用来指示当前对象
+
+```js
+const obj = { foo: 1 };
+// 直接读取
+console.log(obj.foo); // 1
+// 使用 Reflect.get 读取
+console.log(Reflect.get(obj, "foo")); // 1
+```
+
+<br>
+
+#### 合理的响应触发
+
+一个简单的响应式 proxy 编写如下：
+
+```js
+const obj = { foo: 1 };
+
+const p = new Proxy(obj, {
+  // target对象
+  // key欲修改的键
+  // newval修改后的对应值
+  // receiver
+  set(target, key, newval, receiver) {
+    // 获取旧值
+    const oldval = target[key];
+    // 判断当前类型
+    const type = Object.prototype.hasOwnProperty.call(target, key)
+      ? "SET"
+      : "ADD";
+    const res = Reflect.set(target, key, newval, receiver);
+    // 当新旧值不全等且二者均不为NaN时，触发响应！
+    if (oldval !== newval && (oldval === oldval || newval === newval)) {
+      trigger(target, key, type);
+    }
+    return res;
+  },
+});
+```
+
+<br>
+
+**深浅响应**
+
+浅响应只会对首层的对象做响应式处理，而当我们改变深层属性时，并不会触发副作用产生函数更新！  
+深响应即每次属性更改都将结果包装成响应式进行返回
+
+shallowreactive 浅响应代码：
+
+```js
+function shallowReactive(obj) {
+  return new Proxy(obj, {
+    get(target, key, receiver) {
+      if (key === "raw") return target;
+      const res = Reflect.get(target, key, receiver);
+      track(target, key);
+
+      // 因为是浅响应，直接返回原值即可！
+      return res;
+    },
+  });
+}
+```
+
+<br>
+
+可以添加一个“只读”readonly 判断，当视图修改一只读属性时，报错！
+
+```js
+if (isReadonly) {
+  console.warn("该属性只读！");
+  return true;
+}
+```
+
+<br>
+
+#### 代理数组
+
+reactive 代理数组时主要有以下两个场景：
+
+1. 判断索引值小于数组长度，表示不新增数据，则设置类型为 SET
+2. 判断索引值大于数组长度，则新增数据，设置类型为 ADD
+
+<br>
+
+JS 迭代协议：即一个对象能否迭代，取决于该对象或者该对象的原型是否实现了 `@@iterator` 方法  
+如果一个对象实现了 `Symbol.iterator` 方法，那么这个对象就是可以迭代的
+
+数组内建了 `Symbol.iterator` 方法
+
+> 一旦对象可迭代，就可使用 for...of...，而 for...in...无论迭代与否均可使用
+
+```js
+// 将一个对象变成可迭代的
+const obj = {
+  val: 0,
+  // 设置标识，使其可迭代！
+  [Symbol.iterator]() {
+    return {
+      next() {
+        return {
+          value: obj.val++,
+          done: obj.val > 10 ? true : false,
+        };
+      },
+    };
+  },
+};
+
+// 调用可迭代对象
+for (const values of obj) {
+  console.log(values); // 0 1 2 3 4 5 6 7 8 9
+}
+```
+
+<br>
+
+#### 代理 set 与 map
+
+**size 属性**
+
+集合的 size 属性是一个访问器属性，故不能从代理对象中获取，只能从原始对象中取出！
+
+以下表示当判断入参为 size 时，reflect 闭包作用域选择原始 set 对象，防止报错
+
+```js
+const s = new Set([1, 2, 3]);
+const p = new Proxy(s, {
+  get(target, key, receiver) {
+    // 当入参为size时，指定反射第三个参数为原始set对象
+    if (key === "size") {
+      return Reflect.get(target, key, target);
+    }
+    // 非size参数就不多管了
+    return Reflect.get(target, key, receiver);
+  },
+});
+
+console.log(s.size); // 3
+```
+
+<br>
+
+**delete 删除操作**
+
+delete 是一个方法，他需要被绑定在原始对象而非代理对象上才可发挥作用！
+
+使用 bind，改变作用域到原始对象上
+
+```js
+const s = new Set([1, 2, 3]);
+const p = new Proxy(s, {
+  get(target, key, receiver) {
+    // 当入参为size时，指定反射第三个参数为原始set对象
+    if (key === "size") {
+      return Reflect.get(target, key, target);
+    }
+
+    // 绑定原始数据对象
+    return target[key].bind(target);
+  },
+});
+```
+
+<br>
+
+**foreach 难题**
+
+如果 foreach 回调函数中的 value 形参不是一个响应式对象，那么将无法建立响应联系；
+
+在 foreach 前对 value 进行检测，如果非响应式，则将其包装为响应式并返回使用
+
+```js
+forEach(callback) {
+  const wrap = (val) => (typeof val === "object" ? reactive(val) : val);
+  ...
+},
+```
+
+<br>
+
+**两大响应式操作**
+
+get 读取数据时：使用 track 函数追踪依赖关系建立响应联系；  
+set 设置数据时：使用 trigger 函数触发响应；
+
+> 数据污染：把响应式数据设置到原始数据上的行为
+
+<br>
+
+**迭代器协议与可迭代协议**
+
+可迭代协议指的是一个对象实现了 Symbol.iterator 方法  
+迭代器协议指的是一个对象实现了 next 方法
+
+一个对象可同时实现二者：
+
+```js
+const obj = {
+  // 迭代器协议
+  next() {},
+  // 可迭代协议
+  [Symbol.iterator]() {
+    return this;
+  },
+};
+```
+
+<br>
+
+#### 第二章快速总结
+
+vuejs3 的响应式数据是基于 proxy 实现的
+
+访问器属性 this 指向问题可以使用 reflect 进行重定向
+
+合理触发 ITERATE_KEY 相关联的副作用函数重新执行
+
+数组是一个异质对象（异质对象相对的概念是常规对象）
+
+在代理对象中查找不到元素时，再去原始对象里面找
+
+修改数组长度的原型方法需要使用标记变量 shouldTrack 来代表是否允许进行追踪，以免多个副作用函数相互调用导致栈溢出
+
+集合以及映射的 size 属性是一个访问器属性！
+
+注意数据污染问题
+
+可迭代协议以及迭代器协议区分
+
+<br>
+
+### 三、原始值响应式
+
+#### ref

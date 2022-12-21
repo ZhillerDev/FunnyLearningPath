@@ -608,3 +608,42 @@ function proxyRefs(target) {
 <br>
 
 ### 四、渲染器设计
+
+#### 渲染器+响应系统
+
+**最简渲染函数**
+
+使用以下函数渲染静态字符串或者动态拼接内容
+
+```js
+// 渲染函数
+function renderer(domString, container) {
+  container.innerHTML = domString;
+}
+
+// 渲染dom
+renderer("<p>123</p>", document.getElementById("main"));
+```
+
+<br>
+
+**vuereactivity**
+
+`@vue/reactivity` 包包含了副作用函数 effect 以及响应式 ref
+
+<br>
+
+#### 渲染器基本原理
+
+渲染器 renderer，渲染 render
+
+虚拟节点（vnode） === 虚拟 DOM（vdom）
+
+渲染器把虚拟 DOM 节点渲染为真实 DOM 节点的过程叫作挂载（mount）
+
+第一次渲染称为挂载  
+后续渲染称为打补丁（patch），也即更新 dom
+
+<br>
+
+#### DIY 渲染器

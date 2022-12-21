@@ -647,3 +647,86 @@ renderer("<p>123</p>", document.getElementById("main"));
 <br>
 
 #### DIY 渲染器
+
+**createRenderer 函数**
+
+这是一个构建渲染器的函数，特别留意其中的打补丁 patch 函数的编写！
+
+patch 的三个参数分别指：旧 vnode，新 vnode，挂载位置
+
+```js
+function createRenderer() {
+  // dom更新函数
+  function patch(n1, n2, container) {}
+
+  // 渲染函数
+  function render(vnode, container) {
+    // 如果虚拟DOM存在，则执行更新程序
+    // 如果不存在，就挂载它
+    if (vnode) {
+      patch(container._vnode, vnode, container);
+    } else {
+      if (container._vnode) {
+        container.innerHTML = "";
+      }
+    }
+    container._vnode = vnode;
+  }
+}
+```
+
+<br>
+
+**构建一个 vnode 然后渲染它**
+
+```js
+const vnode = {
+  type: "h1",
+  children: "helloworld",
+};
+
+const renderer = createRenderer();
+renderer.render(vnode, document.querySelector("#main"));
+```
+
+<br>
+
+**兼容所有浏览器渲染需求**
+
+可以将配置项交予渲染者进行定义，而不写死，这样就可以适配多浏览器了！
+
+首先在渲染器函数内定义三大配置项：
+
+```js
+function createRenderer() {
+
+  // 定义三大配置项
+  const { createElement, insert, setElementText } = options;
+
+  function mountElement(){...}
+}
+```
+
+<br>
+
+定义 `mountElement`
+
+```js
+// 挂载元素函数
+function mountElement(vnode, container) {
+  // 判断元素类型
+  const ele = createElement(vnode.type);
+  // 如果类型为string，那么设置文本
+  if (typeof vnode.children === "string") {
+    setElementText(ele, vnode.children);
+  }
+  // 将新元素插入到指定挂载点
+  insert(ele, container);
+}
+```
+
+<br>
+
+### 五、挂载与更新
+
+#### 挂载子元素

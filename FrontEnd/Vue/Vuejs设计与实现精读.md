@@ -488,3 +488,44 @@ vuejs3 的响应式数据是基于 proxy 实现的
 <br>
 
 #### ref
+
+由于 proxy 无法阻止原始值的修改，故此方法在这里不管用
+
+我们可以创建一个包裹对象把原始值包起来；  
+然后在使用 reactive 将该包裹对象变成响应式的即可
+
+> \_\_v_isRef 属性是用来判断是否为 ref 包裹对象的判据
+
+```js
+function ref(val) {
+  // 包裹对象
+  const wrapper = {
+    value: val,
+  };
+  // 是否为ref的判据
+  Object.defineProperty(wrapper, "__v_isRef", {
+    value: true,
+  });
+  // 返回响应式数据
+  return reactive(wrapper);
+}
+```
+
+<br>
+
+#### 响应丢失
+
+响应丢失问题：使用 reactive 创建响应式对象后，使用多参的形式 return，则实际上返回的是普通对象而非响应式对象！
+
+```js
+export default {
+  setup() {
+    const obj = reactive({ a: 1, b: 2 });
+    return {
+      ...obj,
+    };
+  },
+};
+```
+
+<br>

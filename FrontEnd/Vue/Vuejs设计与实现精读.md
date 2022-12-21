@@ -586,3 +586,25 @@ function toRef(obj, key) {
 <br>
 
 #### 自动脱 ref
+
+使用 proxy 代理
+
+判断如果存在属性 `__v_isRef` ，表示其为 ref，则返回该 ref 的值；  
+如果只是普通对象，那原样返回即可
+
+```js
+function proxyRefs(target) {
+  return new Proxy(target, {
+    get(target, key, receiver) {
+      const value = Reflect.get(target, key, receiver);
+      return value.__v_isRef ? value.value : value;
+    },
+  });
+}
+```
+
+> reactive 就是一个自动脱 ref 的例子，使用他的时候无需额外调用 value 即可获取值
+
+<br>
+
+### 四、渲染器设计

@@ -529,3 +529,60 @@ export default {
 ```
 
 <br>
+
+**响应关系建立**
+
+obj 为原响应对象
+
+newobj 内拥有与 obj 同名的所有属性值，且均一一编写访问器属性 value  
+value 执行后返回原响应对象中的值
+
+这样一来，修改 obj 属性后，便会自动触发副作用函数执行！
+
+```js
+const obj = reactive({ a: 1, b: 2 });
+
+const newobj = {
+  a: {
+    get value() {
+      return obj.a;
+    },
+  },
+  b: {
+    get value() {
+      return obj.b;
+    },
+  },
+};
+
+console.log(newobj.a.value);
+```
+
+<br>
+
+**toRef 函数的实现**
+
+使用包裹 wrapper，内部加上 getter、setter 方法实现响应式
+
+```js
+function toRef(obj, key) {
+  const wrapper = {
+    get value() {
+      return obj[key];
+    },
+    set value(val) {
+      obj[key] = val;
+    },
+  };
+
+  Object.defineProperty(wrapper, "__v_isRef", {
+    value: true,
+  });
+
+  return wrapper;
+}
+```
+
+<br>
+
+#### 自动脱 ref

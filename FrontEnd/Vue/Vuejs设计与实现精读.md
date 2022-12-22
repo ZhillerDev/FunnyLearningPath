@@ -798,3 +798,50 @@ function mountElement(vnode, container) {
 ```
 
 <br>
+
+#### 不同类型 vnode 打补丁流程
+
+1. 如果旧节点存在且类型不等于新节点，则卸载旧节点并置 null
+2. vnode 可以是普通标签或者组件或者 fragment，要做出判断
+
+```js
+function patch(n1, n2, container) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1);
+    n1 = null;
+  }
+  // 代码运行到这里，证明 n1 和 n2 所描述的内容相同
+  const { type } = n2;
+  // 如果 n2.type 的值是字符串类型，则它描述的是普通标签元素
+  if (typeof type === "string") {
+    if (!n1) {
+      mountElement(n2, container);
+    } else {
+      patchElement(n1, n2);
+    }
+  } else if (typeof type === "object") {
+    // 如果 n2.type 的值的类型是对象，则它描述的是组件
+  } else if (type === "xxx") {
+    // 处理其他类型的 vnode
+  }
+}
+```
+
+<br>
+
+#### 事件处理
+
+普通版处理流程：
+
+1. 添加事件使用 addEventListener
+2. 更新事件，先 removeEventListener 移除事件，再添加新事件
+
+<br>
+
+进阶版处理流程：
+
+1. 绑定一个伪事件处理函数 invoker，设置真正事件处理函数为 invoker.value 的值
+2. 每次更新事件仅需修改 invoker.value 即可
+3. 使用一个对象管理所有的注册事件，避免事件之间的覆盖（原始情况下，后注册的事件会直接覆盖掉前面的）
+
+<br>

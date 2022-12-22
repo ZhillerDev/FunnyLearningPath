@@ -849,3 +849,61 @@ function patch(n1, n2, container) {
 **事件冒泡处理**
 
 屏蔽所有绑定时间晚于事件触发时间的事件处理函数的执行
+
+<br>
+
+**fragment**
+
+> 使用 fragment 片段来描述多个根节点
+
+fragment 实现多根节点实际上就是把根节点全部存在 children 里面了！
+
+描述一个模板标签 template 下存在四个 li 标签，可以用 vnode 这么表示
+
+```js
+const vnode = {
+  type: Fragment,
+  children: [
+    { type: "li", children: "1" },
+    { type: "li", children: "2" },
+    { type: "li", children: "3" },
+  ],
+};
+```
+
+<br>
+
+fragment 本身不会被渲染，故仅渲染其子节点
+
+<br>
+
+#### 小结哦！
+
+HTML Attributes 和 DOM Properties
+
+class 属性增强以及设置 class 的三种方式性能优劣分析
+
+卸载操作需要注意的挂载问题
+
+vnode 更新时判据，新旧 vnode 判断是否需要打补丁 patch
+
+props 事件处理与伪事件 invoker 使用
+
+绑定事件的时间与触发事件的时间
+
+<br>
+
+### 六、Diff
+
+#### 基本原理
+
+非 Diff 状态：更新时，卸载所有旧的 vnode 然后在挂载新的 vnode，无法复用，性能消耗大
+
+Diff：新旧 vnode 进行比对，只更新有变化的地方
+
+对于新旧 vnode，有以下三种更新方式：
+
+1. 新旧 vnode 的 children 长度一致：遍历一个，然后与另一个进行比对
+2. children 长度不一致，变量长度最短的那一个，然后依次挂载/卸载多出来的部分
+
+<br>

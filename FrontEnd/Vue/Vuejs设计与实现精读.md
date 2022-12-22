@@ -730,3 +730,71 @@ function mountElement(vnode, container) {
 ### 五、挂载与更新
 
 #### 挂载子元素
+
+DOM Properties != HTML Attributes  
+但是二者往往（并非所有！）一一对应，如 `id="123"` 对应 `el.id`
+
+把 HTML Attributes 与 DOM Properties 具有相同名称（即 id）的属性看作直接映射
+
+核心理念：
+
+1. HTML Attributes 的作用是设置与之对应的 DOM Properties 的初始值
+2. 一个 HTML Attribute 可以对应多个 DOM Properties
+3. 浏览器有矫正作用，即把不正确的属性值调整为默认值
+
+<br>
+
+#### 元素属性
+
+对于布尔类型，空字符串相当于 false  
+针对属性 disable，我们希望不传入任何参数（即空字符串）时，隐藏元素
+
+这个时候就要加一个判断，当属性为布尔类型且值为空字符串时，手动设置为 true，而不是让浏览器矫正为 false！！！
+
+<br>
+
+#### class 处理
+
+请看下方一段 DOM 以及其对应的 vnode
+
+```js
+// 渲染结果
+<p class="pig cat"></p>;
+
+// vnode
+const vnode = {
+  type: "p",
+  props: {
+    class: "pig cat",
+  },
+};
+```
+
+<br>
+
+**设置 class 速度优劣**
+
+目前有三种设置 class 的方式，其中速度最快的是使用 el.className
+
+1. setAttribute
+2. el.className
+3. el.classList
+
+<br>
+
+#### 卸载
+
+若要结束渲染，单纯设置 innerHTML 为空是不严谨的；
+
+应当通过 vnode 获取真实 DOM，并使用原生 DOM 操作进行卸载；  
+下面代码指在挂载 vnode 时自动关联真实 DOM
+
+```js
+function mountElement(vnode, container) {
+  const el = (vnode.el = createElement(vnode.type));
+
+  ...
+}
+```
+
+<br>

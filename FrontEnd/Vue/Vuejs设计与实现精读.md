@@ -1132,10 +1132,47 @@ setupContext 包含以下四个主要对象
 
 #### emit 实现
 
-只需要实现一个 emit 函数并将其添加到 setupContext 对象中  
+只需要实现一个 emit 函数并将其添加到 setupContext 对象中
 
 <br>
 
-#### 插槽
+### 十、异步组件
 
+#### 异步组件实现
 
+直接在 vue 文件内使用 `defineAsyncComponent` 方法定义异步组件，并直接 import 导入
+
+defineAsyncComponent 的源码（异步实现实际上就是使用 promise 的 then 方法）：
+
+```js
+// 接收一异步加载器
+function defineAsyncComponent(loader) {
+  // 存储需要异步加载的组件
+  let InnerComp = null;
+
+  // 返回封装好的组件
+  return {
+    name: "AsyncComponentWrapper",
+    setup() {
+      // 异步组件是否加载成功
+      const loaded = ref(false);
+
+      // 执行加载器函数，返回一个 Promise 实例
+      // 加载成功后，将加载成功的组件赋值给 InnerComp，并将 loaded 标记为 true，代表加载成功
+      loader().then((c) => {
+        InnerComp = c;
+        loaded.value = true;
+      });
+
+      return () => {
+        // 如果异步组件加载成功，则渲染该组件，否则渲染一个占位内容
+        return loaded.value
+          ? { type: InnerComp }
+          : { type: Text, children: "" };
+      };
+    },
+  };
+}
+```
+
+<br>

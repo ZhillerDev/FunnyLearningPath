@@ -947,3 +947,106 @@ Diff：新旧 vnode 进行比对，只更新有变化的地方
 <br>
 
 ### 八、快速 Diff 算法
+
+#### 前后缀处理
+
+首先进行预处理
+
+1. 将两段文本进行全等比较，如果相同，直接就不需要后续的 diff 了
+2. 删去两段文本相同的前后缀
+3. 设新旧子节点的头部节点为 j=0，让 j++，直到遇到不同的节点，在此过程中对于相同 key 值的新旧子节点都需要执行打补丁 patch（此过程处理所有前置节点）
+
+<br>
+
+索引过程
+
+1. 设置新子节点尾部为 newend，旧子节点尾部为 oldend
+2. newend 与 oldend 同时递减，处理所有的后置节点
+
+> 注重原理分析，后续补充！
+
+<br>
+
+### 九、组件实现原理
+
+#### 渲染组件
+
+一个组件内部必须要使用 render 进行渲染，且返回虚拟 DOM
+
+这是一个最简组件实例
+
+```js
+const MyComponent = {
+  // 组件名称，可选
+  name: "MyComponent",
+  // 组件的渲染函数，其返回值必须为虚拟 DOM
+  render() {
+    // 返回虚拟 DOM
+    return {
+      type: "div",
+      children: `我是文本内容`,
+    };
+  },
+};
+```
+
+渲染器中的 mountComponent 函数完成组件的渲染
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type;
+  // 获取组件的渲染函数 render
+  const { render } = componentOptions;
+  // 执行渲染函数，获取组件要渲染的内容，即 render 函数返回的虚拟
+  const subTree = render();
+  // 最后调用 patch 函数来挂载组件所描述的内容，即 subTree
+  patch(null, subTree, container, anchor);
+}
+```
+
+<br>
+
+#### 组件更新
+
+组件初始化步骤：
+
+1. 取得 data 函数后用 reactive 将其变成响应式的
+2. render 函数内将 this 指向 state，并将 state 作为第一个参数传入 render 函数
+
+<br>
+
+将渲染任务包装到一个副作用函数 effect 里面，即可实现响应式更新数据
+
+若要使每次响应式数据修改后，effect 仅执行一次，则需要引入调度器概念  
+这是书中给出的最简调度器实例
+
+```js
+// 任务缓存队列，set可以自动去重
+const queue = new Set();
+// 一个标志，代表是否正在刷新任务队列
+let isFlushing = false;
+// 创建一个立即 resolve 的 Promise 实例
+const p = Promise.resolve();
+// 调度器的主要函数，用来将一个任务添加到缓冲队列中，并开始刷新队列
+function queueJob(job) {
+  // 将 job 添加到任务队列 queue 中
+  queue.add(job);
+  // 如果还没有开始刷新队列，则刷新之
+  if (!isFlushing) {
+    // 将该标志设置为 true 以避免重复刷新
+    isFlushing = true;
+    // 在微任务中刷新缓冲队列
+    p.then(() => {
+      try {
+        // 执行任务队列中的任务
+        queue.forEach((job) => job());
+      } finally {
+        // 重置状态
+        isFlushing = false;
+        queue.clear = 0;
+      }
+    });
+  }
+}
+```

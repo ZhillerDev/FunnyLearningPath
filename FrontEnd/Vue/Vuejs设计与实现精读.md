@@ -1131,3 +1131,11 @@ setupContext 包含以下四个主要对象
 <br>
 
 #### emit 实现
+
+只需要实现一个 emit 函数并将其添加到 setupContext 对象中  
+
+<br>
+
+#### 插槽
+
+

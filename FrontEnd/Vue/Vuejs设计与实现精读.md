@@ -1021,6 +1021,8 @@ function mountComponent(vnode, container, anchor) {
 若要使每次响应式数据修改后，effect 仅执行一次，则需要引入调度器概念  
 这是书中给出的最简调度器实例
 
+即先把 effect 放入微任务队列，等执行栈清空再调出来执行
+
 ```js
 // 任务缓存队列，set可以自动去重
 const queue = new Set();
@@ -1050,3 +1052,7 @@ function queueJob(job) {
   }
 }
 ```
+
+<br>
+
+#### 组件生命周期

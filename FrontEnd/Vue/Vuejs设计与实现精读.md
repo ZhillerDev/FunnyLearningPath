@@ -1119,3 +1119,15 @@ const comp = {
 
 <br>
 
+setup 接收两个参数，分别是 props 以及 setupContext
+
+setupContext 包含以下四个主要对象
+
+1. slots 插槽
+2. emit 自定义事件
+3. attrs 自定义属性
+4. expose 暴露
+
+<br>
+
+#### emit 实现

@@ -1055,4 +1055,67 @@ function queueJob(job) {
 
 <br>
 
-#### 组件生命周期
+#### 父子组件
+
+这是一个简单的父子组件代码
+
+```js
+// 子组件
+<template>
+  <MyComponent :title="title" />
+</template>
+
+// 父组件
+const vnode = {
+  type: MyComponent,
+  props: {
+    title: 'A Big Title'
+  }
+}
+```
+
+父组件更新导致子组件更新（被动更新）过程：
+
+1. 父组件自更新
+2. 渲染器检查 subTree 发现存在 vnode，则调用 patchComponent 实现子组件更新
+
+<br>
+
+#### setup 函数
+
+setup 函数为配合组合式 API 所引入的
+
+他有如下两种返回值形式
+
+```js
+// 返回函数
+const comp = {
+  setup() {
+    return () => {
+      return {
+        type: "div",
+        children: "give up for vuejs",
+      };
+    };
+  },
+};
+
+// 返回对象
+const comp = {
+  setup() {
+    const count = ref(0);
+    return {
+      count,
+    };
+  },
+  render() {
+    return {
+      type: "div",
+      children: `count is ${this.count}`,
+    };
+  },
+};
+```
+
+<br>
+

@@ -1142,7 +1142,7 @@ setupContext 包含以下四个主要对象
 
 直接在 vue 文件内使用 `defineAsyncComponent` 方法定义异步组件，并直接 import 导入
 
-defineAsyncComponent 的源码（异步实现实际上就是使用 promise 的 then 方法）：
+defineAsyncComponent 最简实现（异步实现实际上就是使用 promise 的 then 方法）：
 
 ```js
 // 接收一异步加载器
@@ -1176,3 +1176,22 @@ function defineAsyncComponent(loader) {
 ```
 
 <br>
+
+**超时问题**
+
+根据用户网络环境，应设置超时时长，当某组件加载时间超过该时长后就报错；
+
+原理即设置一个定时器，在组件开始加载时计时，超过设定的 timeout 就报错，代码添加在 defineAsyncComponent 方法里
+
+<br>
+
+#### 函数式组件
+
+增补
+
+<br>
+
+### 十一、内建组件
+
+#### keepalive
+

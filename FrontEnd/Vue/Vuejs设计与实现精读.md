@@ -1445,6 +1445,9 @@ const tokens = tokenize(`<p>Vue</p>`);
 
 <br>
 
-#### 构造AST
+#### 构造 AST
 
+引用 `通用用途语言 GPL` 中的 `梯度下降算法` 来实现 DSL
+（因为 vuejs 无运算符优先级，故无需考虑）
 
+![](../imgs/vue/vuejs_optimize/vp2.png)

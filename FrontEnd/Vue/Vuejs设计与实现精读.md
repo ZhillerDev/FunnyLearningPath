@@ -1783,3 +1783,78 @@ function parseAttributes(context) {
 <br>
 
 ### 十四、编译优化
+
+#### 动态节点收集
+
+**patchflags**
+
+设存在以下代码：
+
+```html
+<div>
+  <div>foo</div>
+  <p>{{ bar }}</p>
+</div>
+```
+
+编译得到 vnode，此时为插值语法 bar 添加一个标志 patchFlag，表示此为动态语法（无论值为多少，只要存在 patchFlag 就表示其为动态语法）
+
+patchFlag 有四个值
+
+1. 数字 1：代表节点有动态的 textContent
+2. 数字 2：代表元素有动态的 class 绑定
+3. 数字 3：代表元素有动态的 style 绑定
+4. 数字 4：其他
+
+```js
+const vnode = {
+  tag: "div",
+  children: [
+    { tag: "div", children: "foo" },
+    { tag: "p", children: ctx.bar, patchFlag: 1 },
+  ],
+};
+```
+
+<br>
+
+`dynamicChildren` 专门存储提取到的动态节点
+
+此时 `vnode` 可以称为一个 `Block`
+
+> 一个 Block 可以递归的收取当前及其所有子孙的所有动态节点！
+
+```js
+const vnode = {
+  ...
+
+  // 将 children 中的动态节点提取到 dynamicChildren 数组中
+  dynamicChildren: [
+    // p 标签具有 patchFlag 属性，因此它是动态节点
+    { tag: "p", children: ctx.bar, patchFlag: PatchFlags.TEXT },
+  ],
+};
+```
+
+<br>
+
+此时，执行打补丁更新时，直接跳过 vnode 的 children，只需要更新其中的 dynamicChildren 即可！
+
+<br>
+
+**动态节点与渲染**
+
+在 `createVNode` 函数内，检测存在补丁标志 `patchFlags` 的子节点，并将他们 push 到 `currentDynamicChildren` 数组内部
+
+注意函数执行的顺序是从内到外！故 currentDynamicChildren 最终能获取所有的动态子代节点
+
+<br>
+
+`patchElement` 函数内部；  
+若 `vnode` 存在 `dynamicChildren` 数组，直接调用 `patchBlockChildren` 函数完成更新，不理会所有静态节点；
+
+> 使用靶向更新避免 props 大量重更
+
+<br>
+
+#### Block 树

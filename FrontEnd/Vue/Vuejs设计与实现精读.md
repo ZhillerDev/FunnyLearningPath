@@ -1956,10 +1956,192 @@ render() {
 
 缓存内联事件处理函数可以避免不必要的更新
 
-譬如会为诸如 `@click=""` 事件创建内联函数，每次都从 cache 数组中获取内联函数，避免重新渲染  
+譬如会为诸如 `@click=""` 事件创建内联函数，每次都从 cache 数组中获取内联函数，避免重新渲染
 
 <br>
 
 ### 十五、同构渲染
 
+#### 客户端渲染 CSR
 
+CSR 流程图
+
+![](../imgs/vue/vuejs_optimize/vp4.png)
+
+1. 首先获取今天 HTML 页面，此时处于白屏阶段
+2. 浏览器解释 JS 和 CSS，并经过 JS 渲染页面呈现出来
+3. AJAX 请求后端数据，把数据贴到页面对应位置
+
+<br>
+
+CSR 存在白屏问题，且 SEO 不稳定；
+
+SSR 不存在白屏问题，且对 SEO 友好；
+
+<br>
+
+#### 同构渲染
+
+> 同构渲染即 `CSR + SSR`  
+> 同构渲染无法提高 `可交互时间TTI`
+
+基于 vuejs 的同构渲染流程：
+
+1. 服务器返回浏览器 `带有初始化数据的 HTML 页面`（与 SSR 步骤差不多）
+2. 浏览器根据初始化界面中的 script 以及 link 标签请求服务器获取资源（与 CSR 步骤差不多）
+3. JS 加载完毕，执行激活
+
+<br>
+
+**vuejs 激活操作**
+
+在 JS 加载完毕后需要将 vuejs 连接到对应的 HTML 页面上，此时就需要两步激活
+
+1. Vue.js 在当前页面已经渲染的 DOM 元素以及 Vue.js 组件所渲染的虚拟 DOM 之间建立联系
+2. Vue.js 从 HTML 页面中提取由服务端序列化后发送过来的数据，用以初始化整个 Vue.js 应用程序
+
+<br>
+
+#### 客户端激活
+
+组件代码在客户端中执行时，不需要再次创建 DOM 元素，它只要做以下两件事：
+
+1. 在页面中的 DOM 元素与虚拟节点对象之间建立联系；
+2. 为页面中的 DOM 元素添加事件绑定。
+
+<br>
+
+从服务端渲染到客户端激活的模拟流程代码：
+
+```js
+// html 代表由服务端渲染的字符串
+const html = renderComponentVNode(compVNode);
+// 假设客户端已经拿到了由服务端渲染的字符串
+// 获取挂载点
+const container = document.querySelector("#app");
+// 设置挂载点的 innerHTML，模拟由服务端渲染的内容
+container.innerHTML = html;
+// 接着调用 hydrate 函数完成激活
+renderer.hydrate(compVNode, container);
+```
+
+<br>
+
+**hydrateNode 函数具体实现**
+
+递归地激活当前元素的子节点，从第一个子节点 el.firstChild 开始，递归地调用 hydrateNode 函数完成激活
+
+```js
+function hydrateNode(node, vnode) {
+  const { type } = vnode;
+  // 1. 让 vnode.el 引用真实 DOM
+  vnode.el = node;
+  // 2. 检查虚拟 DOM 的类型，如果是组件，则调用 mountComponent 函数完成激活
+  if (typeof type === "object") {
+    mountComponent(vnode, container, null);
+  } else if (typeof type === "string") {
+    // 3. 检查真实 DOM 的类型与虚拟 DOM 的类型是否匹配
+    if (node.nodeType !== 1) {
+      console.error("mismatch");
+      console.error("服务端渲染的真实 DOM 节点是：", node);
+      console.error("客户端渲染的虚拟 DOM 节点是：", vnode);
+    } else {
+      // 4. 如果是普通元素，则调用 hydrateElement 完成激活
+      hydrateElement(node, vnode);
+    }
+  }
+  // 5. 重要：hydrateNode 函数需要返回当前节点的下一个兄弟节点，以便继续进行后续的激活操作
+  return node.nextSibling;
+}
+```
+
+> 原文：由于服务端渲染的页面中已经存在真实 DOM 元素，所以当调用 mountComponent 函数进行组件的挂载时，无须再次创建真实 DOM 元素
+
+<br>
+
+#### 编写同构代码
+
+**组件生命周期**
+
+组件代码于服务端中运行时，不执行挂载，即不执行钩子函数 beforeMount 与 mounted
+
+服务端渲染应用程序的快照，故在服务端中设置计时器没有意义！  
+（可以在 mounted 函数内设置计时器以便在客户端运行）
+
+<br>
+
+**跨平台 API**
+
+避免使用平台特有 API，譬如 window 和 document
+
+使用 `import.meta.env.xxx` 这种全局环境变量来避免
+
+<br>
+
+**单端引入模块**
+
+由于第三方模块存在非同构代码，导致出现 bug
+
+可以使用条件引用的方式，仅在特点环境下加载模板
+
+如下，根据全局环境变量判断不属于某个环境后依次引入对应的第三方模块
+
+```html
+<script>
+  let storage
+  if (!import.meta.env.SSR) {
+    // 用于客户端
+    storage = import('./storage.js')
+  } else {
+    // 用于服务端
+    storage = import('./storage-server.js')
+  }
+  export default {
+    // ...
+  }
+</script>
+```
+
+<br>
+
+**避免交叉请求**
+
+要为每一个请求创建独立的应用实例，可以避免不同请求共用同一个应用实例所导致的状态污染
+
+<br>
+
+**`<ClientOnly>` 组件**
+
+使用 `<ClientOnly>` 标签，让无法 SSR 的第三方组件得以只能在客户端中运行
+
+```html
+<template>
+  <ClientOnly>
+    <SsrIncompatibleComp />
+  </ClientOnly>
+</template>
+```
+
+> clientonly 的实现也很简单，即设置一标记变量 show，默认 false，当客户端渲染时才为 true；使得只能等到 mounted 钩子函数触发后才渲染该插槽内内容！
+
+<br>
+
+#### 结语
+
+一些重要的转义规则：
+
+1. 对于普通内容，应该对文本中的以下字符进行转义  
+   将字符 & 转义为实体 `&amp;`  
+   将字符 < 转义为实体 `&lt;`  
+   将字符 > 转义为实体 `&gt;`
+2. 对于属性值，除了上述三个字符应该转义之外，还应该转义下面两个字符  
+   将字符 " 转义为实体 `&quot;`  
+   将字符 ' 转义为实体 `&#39;`
+
+<br>
+
+原文摘抄（懒得总结了呜呜呜）：务端渲染不存在数据变更后的重新渲染，所以无须调用 reactive 函数对 data 等数据进行包装，也无须使用 shallowReactive 函数对 props 数据进行包装。正因如此，我们也无须调用 beforeUpdate 和 updated 钩子
+
+<br>
+
+### END

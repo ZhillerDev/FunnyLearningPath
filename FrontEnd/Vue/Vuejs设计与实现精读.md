@@ -1195,3 +1195,106 @@ function defineAsyncComponent(loader) {
 
 #### keepalive
 
+keepalive 是为了保证一个组件可以复用而无需每次都卸载重建浪费资源
+
+被 keepalive 包裹的组件，会有以下两种状态：
+
+1. 卸载（deactivated）状态：组件并不是真的卸载，而是放到一个隐藏容器中
+2. 挂载（activated）状态：从隐藏容器中再拿出组件的过程
+
+<br>
+
+**keepalive 实现代码**
+
+```js
+const KeepAlive = {
+  // KeepAlive 组件独有的属性，用作标识
+  __isKeepAlive: true,
+  setup(props, { slots }) {
+    // 创建一个缓存对象
+    // key: vnode.type
+    // value: vnode
+    const cache = new Map()
+    // 当前 KeepAlive 组件的实例
+    const instance = currentInstance
+    // 对于 KeepAlive 组件来说，它的实例上存在特殊的 keepAliveCtx 对象，该对象由渲染器注入
+    // 该对象会暴露渲染器的一些内部方法，其中 move 函数用来将一段 DOM 移动到另一个容器中
+    const { move, createElement } = instance.keepAliveCtx
+    // 创建隐藏容器
+    const storageContainer = createElement('div')
+    // 卸载和挂载的方法
+   instance._deActivate = (vnode) => {
+     move(vnode, storageContainer)
+   }
+   instance._activate = (vnode, container, anchor) => {
+     move(vnode, container, anchor)
+   }
+
+   return () => {
+     // KeepAlive 的默认插槽就是要被 KeepAlive 的组件
+     let rawVNode = slots.default()
+     // 如果不是组件，直接渲染即可，因为非组件的虚拟节点无法被 KeepAlive
+     if (typeof rawVNode.type !== 'object') {
+       return rawVNode
+
+     // 在挂载时先获取缓存的组件 vnode
+     const cachedVNode = cache.get(rawVNode.type)
+     if (cachedVNode) {
+       // 如果有缓存的内容，则说明不应该执行挂载，而应该执行激活
+       // 继承组件实例
+       rawVNode.component = cachedVNode.component
+       // 在 vnode 上添加 keptAlive 属性，标记为 true，避免渲染器重新挂载它
+       rawVNode.keptAlive = true
+     } else {
+       // 如果没有缓存，则将其添加到缓存中，这样下次激活组件时就不会执行新的挂载动作了
+       cache.set(rawVNode.type, rawVNode)
+
+     // 在组件 vnode 上添加 shouldKeepAlive 属性，并标记为 true，避免渲染器真的将组件卸载
+      rawVNode.shouldKeepAlive = true
+      // 将 KeepAlive 组件的实例也添加到 vnode 上，以便在渲染器中访问
+      rawVNode.keepAliveInstance = instance
+      // 渲染组件 vnode
+      return rawVNode
+    }
+  }
+}
+```
+
+<br>
+
+**包含与否**
+
+keepalive 可以根据用户传入的数据决定是否要缓存组件；  
+include 属性：表示需要缓存的组件名  
+exclude 属性：表示不需要缓存的组件名
+
+俩属性一般使用正则进行匹配，下面是 keepalive 的模板：
+
+```js
+const keepalive = {
+  _isKeepalive: true,
+  props: {
+    include: /regexp/,
+    exclude: /regexp/,
+  },
+  setup(props, { slots }) {
+    return () => {};
+  },
+};
+```
+
+<br>
+
+**缓存**
+
+当缓存不存在时会设置新的缓存，此时需要存在一个缓存阈值来控制缓存数量不能无限的增长下去；
+
+可参考 JAVA 的 GC 中新老生代的方法，如果超出缓存阈值，那就清理掉最先使用的缓存；
+
+<br>
+
+#### teleport 组件
+
+> teleport 组件的作用：跨 DOM 层级渲染，避免 z-index 影响
+
+<br>

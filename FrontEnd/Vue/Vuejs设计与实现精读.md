@@ -1298,3 +1298,77 @@ const keepalive = {
 > teleport 组件的作用：跨 DOM 层级渲染，避免 z-index 影响
 
 <br>
+
+**teleport 最简实现**
+
+teleport 的使用模板，还有很多问题没有解决，这里仅提供参考！
+
+```js
+const teleport = {
+  _isTeleport: true,
+  process(n1, n2, container, anchor, internals) {
+    // 获取渲染器内部方法
+    const { patch } = internals;
+
+    // 若干旧vnode不存在，则挂载新的vnode
+    if (!n1) {
+      // 获取挂载点
+      const target =
+        typeof n2.props.to === "string"
+          ? document.querySelector(n2.props.to)
+          : n2.props.to;
+      // 将新vnode的子节点挂载到指定挂载点
+      n2.children.forEach((c) => patch(null, c, target, anchor));
+    } else {
+      // 更新代码
+    }
+  },
+};
+```
+
+<br>
+
+#### transition
+
+> transition 俩要素：  
+> DOM 被挂载，则添加动效到该 DOM  
+> DOM 被卸载，等动效执行完毕再卸载
+
+<br>
+
+**实现原理**
+
+假设有如下代码
+
+```html
+<Transition>
+  <div>123</div>
+</Transition>
+```
+
+transition 内部整体视为一个插槽 slot
+
+故此为 transition 的基本实现源码
+
+```js
+const Transition = {
+  name: "Transition",
+  setup(props, { slots }) {
+    return () => {
+      // 通过默认插槽获取过渡元素
+      const innerVnode = slots.default();
+      // 对应动效加载各个阶段的钩子函数
+      innerVnode.transition = {
+        beforeEnter(ele) {},
+        enter(ele) {},
+        leave(ele, performRemove) {},
+      };
+      return innerVnode;
+    };
+  },
+};
+```
+
+<br>
+
+### 十二、编译器核心

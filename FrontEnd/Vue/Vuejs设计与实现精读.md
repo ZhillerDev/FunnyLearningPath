@@ -1858,3 +1858,108 @@ const vnode = {
 <br>
 
 #### Block 树
+
+**v-if、v-else 前后标签不一致问题**
+
+譬如以下代码，v-if 和 v-else 所在标签不一致，这导致 vnode 不会触发动态更新打补丁，出现 bug
+
+```html
+<div>
+  <section v-if="foo">
+    <p>{{ a }}</p>
+  </section>
+  <div v-else>
+    <p>{{ a }}</p>
+  </div>
+</div>
+```
+
+<br>
+
+解决方案：  
+统一 Block；  
+编译器自动识别上下不一致的标签，并将其替换为一致的，然后再执行打补丁；  
+故经过编译器识别替换重组后，结果代码：
+
+```html
+<div>
+  <section v-if="foo">
+    <p>{{ a }}</p>
+  </section>
+  <section v-else>
+    <div>
+      <p>{{ a }}</p>
+    </div>
+  </section>
+</div>
+```
+
+<br>
+
+**结构不稳定问题**
+
+> 原文引用：所谓结构不稳定，从结果上看，指的是更新前后一个 block 的 dynamicChildren 数组中收集的动态节点的数量或顺序不一致
+
+只能放弃靶向更新，回退到传统虚拟 DOM 的 Diff 手段
+
+<br>
+
+#### 静态提升
+
+存在模板
+
+```html
+<div>
+  <p>static text</p>
+  <p>{{ title }}</p>
+</div>
+```
+
+我们需要使用“静态提升”的方法来避免同级别标签中因任意一个存在动态节点而导致整体更新的性能消耗
+
+所谓静态提升，就是把静态节点提到渲染函数之外，渲染函数只能渲染其引用
+
+```js
+// 把静态节点提升到渲染函数之外
+const hoist1 = createVNode("p", null, "text");
+function render() {
+  return (
+    openBlock(),
+    createBlock("div", null, [
+      hoist1, // 静态节点引用
+      createVNode("p", null, ctx.title, 1 /* TEXT */),
+    ])
+  );
+}
+```
+
+<br>
+
+#### 预字符串化
+
+除了静态提升，还可使用预字符串化
+
+把静态节点序列化为字符串，生成一静态 vnode
+
+```js
+const hoistStatic = createStaticVNode('<p></p><p></p><p></p>...20 个...<p></p>')
+render() {
+  return (openBlock(), createBlock('div', null, [
+    hoistStatic
+  ]))
+}
+```
+
+<br>
+
+#### 缓存内联事件处理函数
+
+缓存内联事件处理函数可以避免不必要的更新
+
+譬如会为诸如 `@click=""` 事件创建内联函数，每次都从 cache 数组中获取内联函数，避免重新渲染  
+
+<br>
+
+### 十五、同构渲染
+
+

@@ -1372,3 +1372,79 @@ const Transition = {
 <br>
 
 ### 十二、编译器核心
+
+#### 模板 DSL 编译器
+
+**vuejs 编译流程**
+
+1. 模板编译器对 HTML 源码进行词法分析获得模板 AST
+2. 模板 AST 转换成 Javascript AST
+3. 根据 JS AST 生成对应 JS 代码
+
+AST 即抽象语法书，下面展示了一个简单的 AST  
+即根节点下包裹一个 div 节点
+
+```js
+// type：定义节点类型
+// children：定义子节点
+// tag：定义标签类型
+// props：定义标签对应的属性节点
+// name：指令节点特有，表示指令名称
+// content：表达式节点特有，表示表达式内容
+
+const exp = {
+  type: "Root",
+  children: [
+    {
+      type: "Element",
+      tag: "div",
+    },
+  ],
+};
+```
+
+<br>
+
+**对应解析函数**
+
+parse 函数：解析字符串模板为模板 AST  
+transform 函数：模板 AST 转换成 Javascript AST  
+generate 函数：JS AST 转换为 JS 代码
+
+<br>
+
+#### 有限状态机
+
+**解析器 parser 的有限状态自动机**
+
+解析器会将字符串模板划分为多个 token  
+譬如 `<p>1</p>` 会被划分为 3 个 token： `<p> & 1 & </p>`
+
+有限状态自动机可以理解为：在有限个状态内自动进行状态转移，下图就是 parser 的分析图
+
+![](../imgs/vue/vuejs_optimize/vp1.png)
+
+<br>
+
+**解析结果**
+
+使用 tokenize 函数（源码过长，此处不贴出）获取字符串模板的所有 token
+
+下方代码表示对一段字符串模板进行解析后得到的 3 个 token
+
+> 正则表达式的本质就是有限自动机
+
+```js
+const tokens = tokenize(`<p>Vue</p>`);
+// [
+//   { type: 'tag', name: 'p' },        // 开始标签
+//   { type: 'text', content: 'Vue' },  // 文本节点
+//   { type: 'tagEnd', name: 'p' }      // 结束标签
+// ]
+```
+
+<br>
+
+#### 构造AST
+
+

@@ -1450,4 +1450,76 @@ const tokens = tokenize(`<p>Vue</p>`);
 引用 `通用用途语言 GPL` 中的 `梯度下降算法` 来实现 DSL
 （因为 vuejs 无运算符优先级，故无需考虑）
 
+<br>
+
+**构建过程**
+
+主要有三个元素，其中 elementStack 用来维护一个栈，栈中存放 token，之后出栈就完美的构成 AST
+
 ![](../imgs/vue/vuejs_optimize/vp2.png)
+
+<br>
+
+#### AST 转换
+
+`AST` 的转换，指的是对 `AST` 进行一系列操作，将其转换为新的 `AST` 的过程（用于适配不同语言）
+
+使用 `DFS` 来替换 `AST` 中的指定标签，实现 `AST` 转换的功能！  
+该替换操作可以解耦为以外部函数，每次都使用对应函数来处理替换、增删功能
+
+<br>
+
+转换标签节点的代码，必须要卸载退出阶段的回调函数内；  
+这样可以保证所有子节点处理完毕后才开始转换！
+
+<br>
+
+AST 需要转换成 Javascript AST
+
+转换完成后即可使用 render 渲染该 AST
+
+<br>
+
+#### 代码生成
+
+> 本节实现 generate 代码，将 Javascript AST 生成对应的 JS 代码
+
+<br>
+
+**基本原理**
+
+这是 generate 函数运作的基本流程
+
+1. context 表示上下文，在里面处理文本
+2. genNode 用来生成 JS，调用上下文 context
+
+> 可以在 context 对象内部添加一些文本处理函数，譬如 `添加缩进indent()` 或者 `换行newline()`
+
+```js
+function generate(node) {
+  const context = {
+    // 存储最终生成的渲染函数代码
+    code: "",
+    // 在生成代码时，通过调用 push 函数完成代码的拼接
+    push(code) {
+      context.code += code;
+    },
+  };
+  // 调用 genNode 函数完成代码生成的工作，
+  genNode(node, context);
+  // 返回渲染函数代码
+  return context.code;
+}
+```
+
+<br>
+
+**genNode**
+
+很简单，使用 switch 匹配不同的 JavascriptAST 节点，并使用对应生成函数即可
+
+<br>
+
+### 十三、解析器
+
+####

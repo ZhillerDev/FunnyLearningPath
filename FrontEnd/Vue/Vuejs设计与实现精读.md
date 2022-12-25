@@ -1672,3 +1672,17 @@ function parseChildren(context, ancestors) {
 ```
 
 <br>
+
+**parseElement 解析**
+
+该解析分为三个主要部分
+
+1. 解析开始标签 parseTag
+2. 解析子节点 parseChildren
+3. 解析结束标签 parseEndTag
+
+<br>
+
+#### 状态机开启与关闭
+
+

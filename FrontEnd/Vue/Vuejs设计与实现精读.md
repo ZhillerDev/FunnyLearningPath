@@ -1522,4 +1522,153 @@ function generate(node) {
 
 ### 十三、解析器
 
-####
+#### 文本模式
+
+文本模式指的是解析器在工作时所进入的一些特殊状态
+
+解析器默认模式为 DATA，根据不同的标签会触发不同的模式：
+
+1. RCDATA 模式：`<title> 标签、<textarea> 标签`
+2. RAWTEXT 模式：`<style>、<xmp>、<iframe>、<noembed>、<noframes>、<noscript> 等`
+3. CDATA 模式：`<![CDATA[ 字符串`
+
+<br>
+
+**DATA 模式**
+
+遇到字符 < 时，会切换到标签开始状态  
+遇到字符 & 时，会切换到字符引用状态  
+能够处理 HTML 字符实体
+
+<br>
+
+**RCDATA 模式**
+
+遇到字符 < 时，切换到 RCDATA less-than sign state 状态  
+遇到字符 /，切换到 RCDATA 的结束标签状态
+
+在不使用引用符号 & 的情况下，RCDATA 模式不会识别标签，如下代码  
+会把 < 当做普通符号而无法识别内部的 div 标签
+
+```html
+<textarea>
+  <div>asdf</div>asdfasdf
+</textarea>
+```
+
+<br>
+
+**RAWTEXT 模式**
+
+与 RCDATA 模式类似，只是不支持 HTML 实体
+
+<br>
+
+**CDATA**
+
+任何字符都作为普通字符处理，直到遇到 CDATA 的结束标志为止
+
+<br>
+
+#### 梯度下降算法构造 AST
+
+模板解析器基本架构：
+
+```js
+// 定义文本模式，作为一个状态表
+const TextModes = {
+  DATA: "DATA",
+  RCDATA: "RCDATA",
+  RAWTEXT: "RAWTEXT",
+  CDATA: "CDATA",
+};
+
+// 解析器函数，接收模板作为参数
+function parse(str) {
+  // 定义上下文对象
+  const context = {
+    // source 是模板内容，用于在解析过程中进行消费
+    source: str,
+    // 解析器当前处于文本模式，初始模式为 DATA
+    mode: TextModes.DATA,
+  };
+
+  // 调用 parseChildren 函数开始进行解析，它返回解析后得到的子节点
+  // parseChildren 函数接收两个参数：
+  // 第一个参数是上下文对象 context
+  // 第二个参数是由父代节点构成的节点栈，初始时栈为空
+  const nodes = parseChildren(context, []);
+
+  // 解析器返回 Root 根节点
+  return {
+    type: "Root",
+    // 使用 nodes 作为根节点的 children
+    children: nodes,
+  };
+}
+```
+
+**parserChildren**
+
+可视为一状态机，状态数取决于子节点类型数；  
+元素子节点可以有：
+
+1. 标签节点，例如 `<div>`
+2. 文本插值节点，例如 `{{ val }}`
+3. 普通文本节点，例如：`text`
+4. 注释节点，例如 `<!---->`
+5. CDATA 节点，例如 `<![CDATA[ xxx ]]>`
+
+模板代码
+
+```js
+function parseChildren(context, ancestors) {
+  // 定义 nodes 数组存储子节点，它将作为最终的返回值
+  let nodes = [];
+  // 从上下文对象中取得当前状态，包括模式 mode 和模板内容 source
+  const { mode, source } = context;
+
+  // 开启 while 循环，只要满足条件就会一直对字符串进行解析
+  while (!isEnd(context, ancestors)) {
+    let node;
+    // 只有 DATA 模式和 RCDATA 模式才支持插值节点的解析
+    if (mode === TextModes.DATA || mode === TextModes.RCDATA) {
+      // 只有 DATA 模式才支持标签节点的解析
+      if (mode === TextModes.DATA && source[0] === "<") {
+        if (source[1] === "!") {
+          if (source.startsWith("<!--")) {
+            // 注释
+            node = parseComment(context);
+          } else if (source.startsWith("<![CDATA[")) {
+            // CDATA
+            node = parseCDATA(context, ancestors);
+          }
+        } else if (source[1] === "/") {
+          // 结束标签，这里需要抛出错误，后文会详细解释原因
+        } else if (/[a-z]/i.test(source[1])) {
+          // 标签
+          node = parseElement(context, ancestors);
+        }
+      } else if (source.startsWith("{{")) {
+        // 解析插值
+        node = parseInterpolation(context);
+      }
+    }
+
+    // node 不存在，说明处于其他模式，即非 DATA 模式且非 RCDATA 模式
+    // 这时一切内容都作为文本处理
+    if (!node) {
+      // 解析文本节点
+      node = parseText(context);
+    }
+
+    // 将节点添加到 nodes 数组中
+    nodes.push(node);
+  }
+
+  // 当 while 循环停止后，说明子节点解析完毕，返回子节点
+  return nodes;
+}
+```
+
+<br>

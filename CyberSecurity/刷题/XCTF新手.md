@@ -74,3 +74,26 @@ flag 为 `786OsErtk12`
 ![](../imgs/contest/xctf_noob/xn1.png)
 
 <br>
+
+### PHP2
+
+> php 是给开发者看的源代码，phps 是为了直接在网页中查看 php 源码而设计的文件
+
+通过 index.phps 获取网页 php 源代码
+
+```php
+<?php
+if("admin"===$_GET[id]) {
+  echo("<p>not allowed!</p>");
+  exit();
+}
+
+$_GET[id] = urldecode($_GET[id]);
+if($_GET[id] == "admin")
+{
+  echo "<p>Access granted!</p>";
+  echo "<p>Key: xxxxxxx </p>";
+}
+?>
+
+```

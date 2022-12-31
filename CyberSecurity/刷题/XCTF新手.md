@@ -95,5 +95,4 @@ if($_GET[id] == "admin")
   echo "<p>Key: xxxxxxx </p>";
 }
 ?>
-
 ```

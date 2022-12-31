@@ -212,6 +212,8 @@ if(isset($_GET["file1"]) && isset($_GET["file2"]))
 
 题解：纯阅读理解题，自己看代码
 
+涉及知识点：php 语法、弱类型绕过、md5 碰撞
+
 分析代码：
 
 ```php
@@ -260,3 +262,34 @@ if($key1 && $key2){
 
 ?>
 ```
+
+<br>
+
+### file_include
+
+题解：通过 convert.iconv 进行编码转换
+
+源码：
+
+```php
+<?php
+highlight_file(__FILE__);
+    include("./check.php");
+    if(isset($_GET['filename'])){
+        $filename  = $_GET['filename'];
+        include($filename);
+    }
+?>
+```
+
+经过尝试，发现基本的 `filter` 以及 `string.*` `convert.*` 大多数被过滤掉而无法使用
+
+<br>
+
+可以尝试使用 `convert.iconv.a.b/resource`  
+其中 a 表示输入内容的编码类型，b 表示输出内容的编码类型
+
+使用 burp 进行部分常见 php 编码类型的爆破后，得到一组正确的输入输出编码，作为 payload 待入 url 进行请求即可得到 flag  
+`php://filter/convert.iconv.a.b/resource=flag.php`
+
+<br>

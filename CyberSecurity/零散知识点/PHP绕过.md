@@ -16,3 +16,16 @@
 所以最终读出 flag.php 是加密过后的，需要使用 base64 执行解密
 
 <br>
+
+### php://input
+
+模拟输入，比如我们构造如下载荷：  
+`?code=php://input`
+
+使用 apifox 的 POST 请求，请求体选择 raw（或者其他格式），传入内容 `helloworld`
+
+后端 php 接收到的参数 code 的内容就是 “helloworld”
+
+> php 有一个专门的函数读取参数内容，该函数是：file_get_contents
+
+<br>

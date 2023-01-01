@@ -138,6 +138,13 @@ xammp 是`...\xampp\htdocs`
 
 ### Less-11 错误 POST 单引号注入
 
+burp 抓包，发现存在三个 post 参数：uname、password、submit；  
+我们尝试对 uname 进行注入  
+发现使用以下代码可以成功登入，即存在注入漏洞  
+`uname=admin' and 1=1 -- - &passwd=admin&submit=Submit`
+
+之后使用 extractvalue 进行爆表爆列的操作了
+
 <br>
 
 ### Less-21

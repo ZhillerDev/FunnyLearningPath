@@ -172,4 +172,25 @@ burp 抓包，发现存在三个 post 参数：uname、password、submit；
 
 ### Less-17 错误更新查询 POST 注入
 
+后端 php 代码显示对 uname 进行了严格的字符过滤，我们没法在这里注入；  
+但却对 password 没有任何过滤，直接在这里单引号报错注入即可
+
+<br>
+
+### Less-18 错误用户代理头部 POST 注入
+
+burp 抓包，把请求头的 user-agent 改成单引号报错注入的格式就完了
+
+`'and extractvalue(1,concat(0x7e,(select database()),0x7e)) and '`
+
+<br>
+
+### Less-19 Referer 报错注入
+
+和 user-agent 如出一辙，这里修改 Referer 属性值为注入语句即可
+
+<br>
+
+### Less-20 错误 Cookie 头部 POST
+
 ### Less-21

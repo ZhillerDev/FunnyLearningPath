@@ -688,4 +688,140 @@ data 协议上传 base64 加密后内容：`data://text/plain;base64, JTNDJTNGcG
 
 <br>
 
+### easytornade
+
+题解：easy_tornado render 模板注入
+
+打开网页上的三个文件，我们得到几个信息：
+
+1. render 相关->考虑模板注入
+2. flag 文件存放地址
+3. filehash 的加密方法为 `cookiesecret+md5`
+
+<br>
+
+先根据 tornade 可能存在的模板注入，爆出 cookie_secret  
+`error?msg={{handler.settings}}`
+
+拿 flag 文件的路径进行 32 位小写字母 md5 加密！！！  
+注意不要落下了斜杠  
+`/fllllllllllllag`
+
+同理，拿 cookie_secret 进行 md5 加密  
+将二者相加，再执行一次加密后取得密文
+
+<br>
+
+执行请求即可：  
+`/file?filename=/fllllllllllllag&filehash=你的密文`
+
+<br>
+
+### ics-05
+
+可以参考这篇文章：https://blog.csdn.net/zhwho/article/details/100694073?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522167270516916782429733722%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=167270516916782429733722&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-100694073-null-null.142^v68^pc_new_rank,201^v4^add_ask,213^v2^t3_esquery_v3&utm_term=ics-05&spm=1018.2226.3001.4187
+
+<br>
+
+### lottery
+
+> 如果发现无法注册，请看以下你是不是禁用了浏览器 js 了，我就犯了这个低级错误
+
+题解：分析 api.php，根据弱类型刷钱买 flag
+
+下载附件，打开 api.php，找到判定中奖的方法：
+
+```php
+function buy($req){
+	require_registered();
+	require_min_money(2);
+
+	$money = $_SESSION['money']; #存储money
+	$numbers = $req['numbers'];
+	$win_numbers = random_win_nums();
+	$same_count = 0;
+	for($i=0; $i<7; $i++){
+		if($numbers[$i] == $win_numbers[$i]){ #如果传入到numbers==系统生成到win_numbers那么same_count加一
+			$same_count++;
+		}
+	}
+	switch ($same_count) {
+		case 2:
+			$prize = 5;
+			break;
+		case 3:
+			$prize = 20;
+			break;
+		case 4:
+			$prize = 300;
+			break;
+		case 5:
+			$prize = 1800;
+			break;
+		case 6:
+			$prize = 200000;
+			break;
+		case 7:
+			$prize = 5000000;
+			break;
+		default:
+			$prize = 0;
+			break;
+	}
+	$money += $prize - 2;
+	$_SESSION['money'] = $money;
+	response(['status'=>'ok','numbers'=>$numbers, 'win_numbers'=>$win_numbers, 'money'=>$money, 'prize'=>$prize]);
+}
+```
+
+<br>
+
+两个等于仅检查值相等，三个等于才检查值和类型相等；  
+可以使用弱类型比较，只要传入一个 bool 值，另外一个也会被转换为 bool 进行比较；  
+`$numbers[$i] == $win_numbers[$i]`
+
+故当七个码都是 true 的话，每个数字一一比对的结果都是 true，那必然中头等奖；  
+所以我们 burp 拦截购买彩票的请求，发送到 repeater
+
+在最下方的 numbers 参数，使用数组传入七个 true 即可  
+然后一直 send，直到你认为赚钱够了  
+![](../imgs/contest/xctf_noob/xn3.png)
+
+<br>
+
+然后直接高价买入 flag 就完事了
+
+<br>
+
+### shrink
+
+题解：flask 模板注入
+
+直接打开网页就是一串 python 代码，注意其中的关键点
+
+表示需要通过对象 app 获取配置文件的 flag  
+`app.config['FLAG']`
+
+路由，可以尝试在这里使用模板注入  
+`@app.route('/shrink/')`
+
+<br>
+
+既然我们要获取对象 app，则可以从全局变量中查询：  
+`/shrine/{{url_for.__globals__}}`
+
+通过搜索，发现变量 `'current_app'` 是一个指向对象 app 的引用  
+我们依葫芦画瓢，把该变量当做 app 来直接调用 config 中的 FLAG  
+`/shrine/{{url_for.__globals__['current_app'].config['FLAG']}}`
+
+> 拿到 flag：flag{shrine_is_good_ssti}
+
+<br>
+
+### fakebook
+
+> 参考文献：[点击跳转](https://blog.csdn.net/qq_41500251/article/details/105383065?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522167271083616800225514860%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=167271083616800225514860&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-105383065-null-null.142^v68^pc_new_rank,201^v4^add_ask,213^v2^t3_esquery_v3&utm_term=fakebook&spm=1018.2226.3001.4187)
+
+<br>
+
 ###

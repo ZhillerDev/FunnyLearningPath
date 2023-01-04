@@ -51,3 +51,16 @@
 <br>
 
 ### 实战
+
+调用插件  
+`--tamper=xxx.py`
+
+使得 sqlmap 请求使用随机跌 user-agent 来绕过 WAF  
+`--random-agnet`
+
+若服务器开启 CC 拦截，将 user-agent 改变为百度爬虫头即可绕过  
+`--user-agent=""`  
+延迟参数也可以防止服务器检测异常流量从而阻止 sqlmap（延迟单位为秒）  
+`--delay 1`
+
+<br>

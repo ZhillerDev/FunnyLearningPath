@@ -55,7 +55,11 @@
 
 <br>
 
-### 照明原理
+### 布光课程
+
+> 课程视频：https://www.bilibili.com/video/BV1qh411y7x9/?p=25&spm_id_from=pageDriver&vd_source=d8c2ade5b3e393d3bd5f70bf10f366bf
+
+<br>
 
 #### 九宫格布局
 
@@ -92,3 +96,26 @@
 ![](../../imgs/Blender/light/movie/m8.png)
 
 <br>
+
+#### 遮光片
+
+使用遮光片来制作诸如百叶窗的效果
+
+遮光片本身材质不可以影响场景中的其他物体，  
+如下图所示遮光片与渲染结果（左下角）
+
+此时使用三点照明
+
+![](../../imgs/Blender/light/movie/m9.png)
+
+<br>
+
+#### 焦距及其对应类型
+
+15mm-35mm 大型、史诗、恐怖的  
+50mm 标准自画像  
+70mm 优美的引人注意力的景色
+
+<br>
+
+####

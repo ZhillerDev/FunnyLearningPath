@@ -66,3 +66,35 @@ console.log($$(count)); // 编译为ref对象
 ```
 
 <br>
+
+### ref 属性
+
+DOM 上的 ref 属性可以帮助我们在挂载时获取该 DOM
+
+假设目前的 DOM 存在 ref 属性，属性值为 demo
+
+```html
+<template>
+  <div>
+    <div ref="demo">123</div>
+  </div>
+</template>
+```
+
+之后通过响应式 ref 的形式获取到该 DOM
+
+```js
+import { ref } from "vue";
+
+// 特别特别注意！这里的变量名一定要和我们设定的ref属性值完全一致
+// 首先赋null初始化，到onmounted再获取实例
+const demo = ref(null);
+
+onMounted(() => {
+  // .value获取当前指向的DOM
+  // 针对多种需要操作实际DOM的js库来说，推荐使用此方法
+  console.log(demo.value);
+});
+```
+
+<br>

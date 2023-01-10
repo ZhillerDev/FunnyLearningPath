@@ -1079,4 +1079,25 @@ app.config.globalProperties.$env = "helloworld";
 
 <br>
 
-###
+或者使用获取组件实例的办法在 script 中操作全局变量
+
+务必在生命周期钩子里面执行操作！
+
+若我们注册全局变量时使用  
+`app.config.globalProperties.$env`  
+那么使用实例上获取全局变量的方法的时候，必须去掉美元符号，所以此时为  
+`proxy.env`
+
+```js
+import { onMounted, getCurrentInstance } from "vue";
+
+// getCurrentInstance获取当前组件实例
+// 开发环境解构赋值ctx，生产环境解构赋值proxy
+const { proxy } = getCurrentInstance();
+
+onMounted(() => {
+  console.log(proxy.xxx);
+});
+```
+
+<br>

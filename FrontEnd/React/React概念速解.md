@@ -311,4 +311,111 @@ function NumberList(props) {
 
 <br>
 
-#### 表单
+#### 受控组件
+
+react 中的表单采用将所有数值都统一由 state 进行管理
+
+代码解释：
+表单 form 中的 input，其 value 属性直接由顶层 state `管理；onChange` 也是由函数 `handleChange` 动态更新 state 中指定属性的值；
+
+> 由于构造函数内 state 已经初始化为空字符串，故不用担心渲染 input 时会出错！
+
+```js
+class NameForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { value: "" };
+
+    // 没有小括号的函数调用必须要明确指定this指向
+    // 这里没有使用箭头函数的方法，而是使用bind绑定
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleChange(event) {
+    this.setState({ value: event.target.value });
+  }
+
+  // 表单提交操作
+  handleSubmit(event) {
+    alert("提交的名字: " + this.state.value);
+    // 阻止默认的表单post或者get操作，由该方法进行自定义指定
+    event.preventDefault();
+  }
+
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          名字:
+          <input
+            type="text"
+            value={this.state.value}
+            onChange={this.handleChange}
+          />
+        </label>
+        <input type="submit" value="提交" />
+      </form>
+    );
+  }
+}
+```
+
+<br>
+
+对于文本域 `textarea` ，我们不再向其内部写标签，直接使用 `value` 作为该文本域的内容
+
+```js
+<textarea value={this.state.value} onChange={this.handleChange} />
+```
+
+<br>
+
+select 组件里面的 value 直接指代当前激活的是哪一个 option，他的值等于当前几乎跌 option 的 value 值
+
+```js
+<select value={this.state.value} onChange={this.handleChange}>
+  <option value="grapefruit">葡萄柚</option>
+  <option value="lime">酸橙</option>
+  <option value="coconut">椰子</option>
+  <option value="mango">芒果</option>
+</select>
+```
+
+<br>
+
+当存在多个 input 时，为他们添加 name 属性，设置不同名字，并在 onchange 函数内部进行判断即可动态更新对应的 state
+
+```js
+handleInputChange(event) {
+    ...
+    // 获取当前input的name属性值
+    const name = target.name;
+
+    // 根据键值对的方法，赋予指定name的值为value
+    this.setState({
+      [name]: value
+    });
+  }
+ render() {
+    return (
+      <form>
+        <label>
+          参与:
+          <input
+            name="isGoing"
+            type="checkbox"
+            checked={this.state.isGoing}
+            onChange={this.handleInputChange} />
+        </label>
+        ...
+      </form>
+    );
+  }
+```
+
+<br>
+
+### 高级部分
+
+####

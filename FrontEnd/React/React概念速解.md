@@ -150,3 +150,107 @@ state 注意事项
 <br>
 
 #### 事件处理
+
+在 react 中，阻止组件的默认行为只能通过 js 代码实现  
+下面将一个函数抽离，并使用 preventDefault 阻止组件默认行为
+
+```js
+function ActionLink() {
+  function handleClick(e) {
+    // 阻止组件的默认行为
+    e.preventDefault();
+    console.log("The link was clicked.");
+  }
+
+  return (
+    <a href="#" onClick={handleClick}>
+      Click me
+    </a>
+  );
+}
+```
+
+<br>
+
+class 式创建自定义组件时，其中的方法不会自动绑定 this，所以需要我们手动改变其 this 指向到对应的 class 里面去
+
+原理：当你调用一个方法时若不在结尾添加一个小括号，就必须明确其 this 指向，如下代码，我们调用 `handleClick` 方法时没有加小括号，故需要在 `constructor` 函数内改变其 this 指向
+
+```js
+class Toggle extends React.Component {
+  constructor(props) {
+    ...
+
+    // 改变class内的方法handleClick的this指向为本class
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    ...
+  }
+
+  render() {
+    return (
+      // 此情况下必须要为方法handleClick指定this指向
+      <button onClick={this.handleClick}>
+        {this.state.isToggleOn ? "ON" : "OFF"}
+      </button>
+    );
+  }
+}
+```
+
+<br>
+
+这是两种等价的，为方法确定正确的 this 指向的写法
+
+```js
+<button onClick={(e) => this.deleteRow(id, e)}>Delete Row</button>
+<button onClick={this.deleteRow.bind(this, id)}>Delete Row</button>
+```
+
+<br>
+
+#### 条件渲染
+
+与运算符&&
+
+react 基本条件运算，根据之前我们所学知识，花括号内可以填写任意表达式；故以下代码判断，当 `unreadMessages.length > 0` 条件成立时就会执行 `&&` 运算符后面的 JSX
+
+```js
+function Mailbox(props) {
+  const unreadMessages = props.unreadMessages;
+  return (
+    <div>
+      <h1>Hello!</h1>
+      {unreadMessages.length > 0 && (
+        <h2>You have {unreadMessages.length} unread messages.</h2>
+      )}
+    </div>
+  );
+}
+```
+
+<br>
+
+和 vue 一致，你也可以使用三元运算符
+
+```js
+render() {
+  const isLoggedIn = this.state.isLoggedIn;
+  return (
+    <div>
+      The user is <b>{isLoggedIn ? 'currently' : 'not'}</b> logged in.
+    </div>
+  );
+}
+```
+
+<br>
+
+如果你想让组件不渲染，直接返回 null  
+`return null`
+
+<br>
+
+#### 列表渲染

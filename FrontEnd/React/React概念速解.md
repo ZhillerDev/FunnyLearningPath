@@ -254,3 +254,61 @@ render() {
 <br>
 
 #### 列表渲染
+
+react 的列表渲染比较朴实一点，直接调用元素 map 迭代渲染
+
+但和 vue 一样，最好使用 key，否则会出现警告
+
+```js
+function NumberList(props) {
+  const numbers = props.numbers;
+
+  // 使用map取出numbers内部的所有值，渲染到指定JSX
+  const listItems = numbers.map((number) => (
+    // 万不得已的情况下可以直接拿值作为key
+    <li key={number.toString()}>{number}</li>
+  ));
+  return <ul>{listItems}</ul>;
+}
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(
+  <NumberList numbers={numbers} />,
+  document.getElementById("root")
+);
+```
+
+不过官方推荐数据若没有给出 id 值的话，可以拿 map 的索引值作为 key
+
+```js
+// 这里的todo为值，而index是map函数为我们生成的对应索引
+const todoItems = todos.map((todo, index) => <li key={index}>{todo.text}</li>);
+```
+
+<br>
+
+关于 key 使用的注意事项
+
+1. key 必须在 map 函数内定义！
+2. key 在其兄弟节点之间必须唯一，但是全局范围内可以重复
+
+<br>
+
+直接内联 return 一个列表渲染的 JSX，省去了冗余的中间变量
+
+```js
+function NumberList(props) {
+  const numbers = props.numbers;
+  return (
+    <ul>
+      {numbers.map((number) => (
+        <ListItem key={number.toString()} value={number} />
+      ))}
+    </ul>
+  );
+}
+```
+
+<br>
+
+#### 表单

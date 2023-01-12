@@ -580,6 +580,14 @@ vue3 中引用另一个组件非常简单，不再需要设置各个组件的 na
 </script>
 ```
 
+js 版本的命名方式如：
+
+```js
+const props = defineProps({
+  p1: String,
+});
+```
+
 <br>
 
 **传参默认值**
@@ -1101,5 +1109,3 @@ onMounted(() => {
 ```
 
 <br>
-
-

@@ -70,7 +70,45 @@ go env -w GOPROXY=https://goproxy.cn,direct
 
 点击 goland 右上角小绿三角右侧的下拉列表，选择“编辑配置”
 
+按下图配置  
+名称任意取；  
+运行种类必须选择目录；  
+“目录”即选择新建的 src 包；  
+“输出目录”即选择 bin 包；  
+“工作目录”即根目录！！！
+
 ![](../../img/go/gin/g1/g14.png)
+
+<br>
+
+#### 第一个服务器
+
+src 文件夹下新建文件 `main.go`
+
+黏贴以下代码：
+
+> 之后点击编译运行即可开启我们的服务器，服务器默认地址为 localhost:8080
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func main() {
+	router := gin.Default()
+	router.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "服务器跑起来了！")
+	})
+
+    // 修改Run中的参数来改变服务器监听的端口
+	router.Run("12345")
+}
+```
+
+<br>
 
 ### 参考文献
 

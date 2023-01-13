@@ -77,3 +77,74 @@ func main() {
 ```
 
 变量组
+
+```go
+func main() {
+	// 变量组
+	// 可单次或者连续指定
+	var(
+		_ float32 = 32.12
+		_,_,_ int = 1,2,3
+		_,_ = 123,0.123
+	)
+}
+```
+
+<br>
+
+变量指定规则
+
+1. 变量值不可使用 :=
+2. := 只能定义局部变量
+3. := 不能有 var 和数据类型
+4. := 同时定义多个变量必须都执行初始化
+
+<br>
+
+#### 类型转换
+
+Golang 只能显式类型转换！
+
+以下包括数值之间强转以及绕弯的数值到字符串之间强转
+
+```go
+func main() {
+	// num0默认赋值int类型
+	// int不等于int32，同样需要显式强转
+	num0 := 10
+	var _ = int32(num0)
+
+	// 使用strconv.FormatInt进行数值到字符串强转
+	// 1.定义一个int32类型的数字num1
+	// 2.int64(num1)先将其强转64位整数
+	// 3.strconv.FormatInt强转
+	var num1 int32 = 100
+	// strconv.FormatInt的两个参数：
+	// 第一个参数：强转的数字
+	// 第二个参数：转换至几进制
+	var _ string = strconv.FormatInt(int64(num1), 10)
+}
+```
+
+<br>
+
+字符串转数值类型
+
+```go
+func main() {
+	// strconv.ParseInt接收三个参数
+	// 参数一：待转换字符串
+	// 参数二：转换为几进制
+	// 参数三：转换为几位整形
+	// 他会返回两个值，其中第二个返回值为err
+	// 当数值转换未超出范围或无法转换时，err值为nil，否则不为nil
+	str1 := "123"
+	num1,err := strconv.ParseInt(str1,10,32)
+	if err != nil{
+		fmt.Print(err)
+	}
+	fmt.Print(num1)
+}
+```
+
+<br>

@@ -369,4 +369,54 @@ func main() {
 
 <br>
 
-####
+#### 函数进阶
+
+go 中甚至可以为返回值指定名称，即系统会自动返回该名称变量
+
+```go
+// 注意这里不使用:=
+func say() (res string) {
+	res = "shit"
+	return
+}
+```
+
+<br>
+
+匿名函数
+
+```go
+func main() {
+	// 匿名函数声明方式一
+	a := func() {
+		fmt.Printf("shit")
+	}
+	a()
+
+	// 匿名函数声明方式二
+	func(name string) {
+		fmt.Println(name)
+	}("fuck")
+}
+```
+
+<br>
+
+匿名函数作为参数传入
+
+```go
+func main() {
+	work(func() {
+		fmt.Println("fuck")
+	})
+}
+
+func work(f func())  {
+	fmt.Println("shit")
+	f()
+}
+```
+
+<br>
+
+#### 闭包

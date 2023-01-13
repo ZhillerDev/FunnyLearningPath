@@ -308,6 +308,10 @@ func main() {
 
 <br>
 
+#### 数组
+
+<br>
+
 ### 进阶
 
 > 看到这里你是不是觉得像完全 0 基础学语言？看看这 nt 的语法吧！
@@ -420,3 +424,33 @@ func work(f func())  {
 <br>
 
 #### 闭包
+
+经典闭包，只要匿名函数使用外部函数任意一个变量，那么该变量就会一直存在（和 js 闭包概念一致）
+
+```go
+func add() func() int {
+	x := 100
+	return func() int {
+		x++
+		return x
+	}
+}
+```
+
+<br>
+
+延迟执行 defer
+
+加了 defer 修饰的语句会在当前函数正常语句执行完毕后才执行；  
+加 defer 的语句按照 LIFO 原则
+
+```go
+func main() {
+	// 序号表示执行顺序
+	defer fmt.Println("第一个入栈") // 3
+	fmt.Println("正常输出")        // 1
+	defer fmt.Println("第二个入栈") // 2
+}
+```
+
+<br>

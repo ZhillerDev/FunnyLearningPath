@@ -94,17 +94,16 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func main() {
 	router := gin.Default()
-	router.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "服务器跑起来了！")
+	router.GET("/shit", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"name": "jack",
+		})
 	})
-
-    // 修改Run中的参数来改变服务器监听的端口
-	router.Run("12345")
+	router.Run(":12345")
 }
 ```
 

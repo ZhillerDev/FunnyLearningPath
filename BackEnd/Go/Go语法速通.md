@@ -561,3 +561,57 @@ func main() {
 <br>
 
 #### 方法
+
+说白了，就是为一个结构体添加额外的方法
+
+但是一个方法不可以直接调用，比如下方代码直接 `hello()` 是报错的（即可以认定该方法是绑定于结构体上的一部分）
+
+```go
+import "fmt"
+
+type Person struct {
+	name string
+}
+
+// 这是一个方法
+// 为结构体扩展一个新的方法
+func (p Person) hello() {
+	fmt.Println(p.name)
+}
+
+func main() {
+	p := Person{name: "shit"}
+	// 使用刚刚扩展的新方法
+	p.hello()
+}
+```
+
+<br>
+
+#### 接口
+
+和 java 的接口如出一辙
+
+```go
+// Dog 定义结构体
+type Dog struct {
+	name string
+}
+// 定义接口，需要后续实现
+type Animal interface {
+	walk()
+}
+
+// 实现接口，这里被扩展的结构体为Dog
+func (d Dog) walk() {
+	fmt.Println("开始走路")
+}
+
+// 实例化dog，然后调用对应接口即可
+func main() {
+	dog := Dog{name: "shit"}
+	dog.walk()
+}
+```
+
+<br>

@@ -354,6 +354,61 @@ func main() {
 
 #### 字典与映射
 
+字典格式：`map[key类型] value类型{xx:xx,xx:xx}`
+
+```go
+func main() {
+	// 这是一个最简单的map
+	m := map[int]int{0: 1, 1: 100}
+
+	// 为map添加新元素的方法
+	// 自己制定key以及value
+	m[2] = 100
+
+	// 删除key为0的元素
+	delete(m,0)
+}
+```
+
+<br>
+
+#### 结构
+
+简单的结构体以及其创建方式
+
+```go
+func main() {
+	// 创建结构体方法一
+	type Pig struct {
+		name string
+		age  int
+	}
+	// 对结构体进行实例化
+	pig1 := Pig{name: "shit", age: 100}
+
+	// 创建结构体方式二
+	// 直接变量赋值型，避免使用type
+	pig2 := struct {
+		name string
+	}{name: "shit"}
+}
+```
+
+<br>
+
+匿名结构体
+
+```go
+func main() {
+	// 匿名结构体不需要制定名字，继续类型即可
+	type Anony struct {
+		int
+		bool
+	}
+	_ = Anony{100, false}
+}
+```
+
 <br>
 
 ### 进阶
@@ -498,3 +553,11 @@ func main() {
 ```
 
 <br>
+
+#### 指针
+
+> 不愧是脱胎于 C，这么折磨人的玩意还是保留了
+
+<br>
+
+#### 方法

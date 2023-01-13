@@ -260,8 +260,113 @@ func main() {
 
 <br>
 
+#### 运算与条件语句
+
+go 中自增自减符号不可以前置！
+
+go 中的自增自减必须独占一行，即不可以和赋值语句写到一行里面去
+
+<br>
+
+if 判断格式 `if 初始化语句;条件表达式{}`
+
+```go
+func main() {
+	if age := 10; age < 10 {
+		fmt.Printf("shit")
+	}
+
+	// switch的case里面不要写break，可以视为go已经为每个case加上了一个break
+	// 如果非要消除break的影响，使用fallthrough
+	switch num := 10; num {
+	case 1:
+		fmt.Printf("shit")
+	case 2:
+		fallthrough
+	default:
+		fmt.Printf("damn")
+	}
+}
+```
+
+<br>
+
+go 中的 foreach
+
+可以吧这种语法当成解构赋值，i 存储索引，v 存储数值
+
+```go
+func main() {
+    // 声明一个数组
+	arr := [3]int{1, 2, 3}
+    // i和v是两个固定的参数，但是参数名可以变
+	for i, v := range arr {
+		fmt.Printf("%v%v", i, v)
+	}
+}
+```
+
+<br>
+
 ### 进阶
 
 > 看到这里你是不是觉得像完全 0 基础学语言？看看这 nt 的语法吧！
 
 #### 调用命令行
+
+> 所有的命令行参数都会被解析为字符串类型的
+
+`os.Args` 接收所有我们传入的参数；
+
+假设该文件编译为了一个 exe，我们执行该 exe 是使用代码： `main.exe asd 123`  
+则上面三个元素都会变成参数传递给 `os.Args`
+
+```go
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	// 获取传入参数个数
+	num := len(os.Args)
+	// 输出所有参数
+	for i := 0; i < num; i++ {
+		fmt.Printf(os.Args[i])
+	}
+}
+```
+
+<br>
+
+flag 包可以自定义传参名称
+
+则运行 exe 是可以使用命令：`main.exe -name=tom`
+
+```go
+// 写法一
+func main() {
+	// flag对应的三个参数
+	// 参数名、参数默认值、参数简介
+	name := flag.String("name", "jack", "使用者名称")
+	// 命令行参数解析到注册函数
+	flag.Parse()
+	// flag返回的均为指针类型，所以需要解指针
+	fmt.Println("名字是：", *name)
+}
+
+// 写法二
+func main() {
+	var (
+		name string
+		age  int
+	)
+	flag.StringVar(&name, "name", "jack", "姓名")
+	flag.IntVar(&age, "age", 13, "你的年龄")
+	flag.Parse()
+}
+```
+
+<br>
+
+####

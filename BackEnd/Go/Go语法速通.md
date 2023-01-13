@@ -148,3 +148,120 @@ func main() {
 ```
 
 <br>
+
+快速类型转换
+
+```go
+func main() {
+	// 数值快速转换字符串
+	// Itoa仅接受int类型数值
+	var num1 int32 = 32
+	var _ string = strconv.Itoa(int(num1))
+
+	// 字符串快速转换数值
+	// 返回值的err问题上一节讲过，要注意！！！
+	str1 := "shit"
+	num2, err := strconv.Atoi(str1)
+	if err != nil {
+		fmt.Print(err)
+	}
+	fmt.Print(num2)
+}
+```
+
+<br>
+
+#### 常量定义
+
+基本常量定义法以及常量组
+
+```go
+func main() {
+
+	// 直接定义，使用const修饰
+	const _ string = "fuck"
+	const _, _ = 123, "asd"
+
+	// 常量组定义，下一行如果没有指定，那么他的值和上一行一样
+	const (
+		_ = 100
+		_ // 和上一个一样，都是100
+		_,_ = 20,"shit"
+		_,_ // 和上一个一样，注意变量个数必须一致！！！
+	)
+}
+```
+
+<br>
+
+枚举常量
+
+```go
+func main() {
+	// iota可认为是一个枚举值，第一个iota从0开始递增
+	const(
+		_ = iota // 0
+		_ = iota // 1
+		_ = 666 // 没有iota了，中断递增
+		_ = iota // 重新递增，0
+	)
+
+	// 根据常量值上下继承原则，iota也可以实现递增
+	const(
+		_ = iota // 0
+		_ // 1
+		_ // 2
+	)
+
+	// 指定类型后，都会按照该类型进行枚举递增
+	const(
+		_ float32 = iota // 0.0
+		_ // 1.0
+	)
+}
+```
+
+<br>
+
+#### IO
+
+格式化输出和 C 差不多
+
+```go
+func main() {
+	// 格式化字符串，使用printf
+	name, num := "shit", 114
+	fmt.Printf("%s, %d", name, num)
+
+	// %T可以输出值的类型
+	fmt.Printf("%T", name)
+
+	// %v万能输出，直接输出值而无需判断类别
+	fmt.Printf("%v", num)
+}
+```
+
+<br>
+
+scanf 在 go 中的使用
+
+```go
+func main() {
+	var num int
+
+	// 格式化输入
+	fmt.Scanf("%v",&num)
+	// 不带格式化输入
+	fmt.Scan(&num)
+	// 不带格式化输入，仅一行
+	fmt.Scanln(&num)
+}
+```
+
+<br>
+
+### 进阶
+
+> 看到这里你是不是觉得像完全 0 基础学语言？看看这 nt 的语法吧！
+
+#### 调用命令行

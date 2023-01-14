@@ -56,59 +56,6 @@ go env -w GOPROXY=https://goproxy.cn,direct
 
 <br>
 
-### 直接测试
-
-#### 新建环境
-
-老套路，新建的 go 项目会自带一个 go.mod，之后我们在根目录下新建三个主要文件夹：
-
-1. bin 存放编译好的 exe
-2. src 存放源代码
-3. pkg 存放 go get 下载的模块
-
-<br>
-
-点击 goland 右上角小绿三角右侧的下拉列表，选择“编辑配置”
-
-按下图配置  
-名称任意取；  
-运行种类必须选择目录；  
-“目录”即选择新建的 src 包；  
-“输出目录”即选择 bin 包；  
-“工作目录”即根目录！！！
-
-![](../../img/go/gin/g1/g14.png)
-
-<br>
-
-#### 第一个服务器
-
-src 文件夹下新建文件 `main.go`
-
-黏贴以下代码：
-
-> 之后点击编译运行即可开启我们的服务器，服务器默认地址为 `localhost:8080`
-
-```go
-package main
-
-import (
-	"github.com/gin-gonic/gin"
-)
-
-func main() {
-	router := gin.Default()
-	router.GET("/shit", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"name": "jack",
-		})
-	})
-	router.Run(":12345")
-}
-```
-
-<br>
-
 ### 参考文献
 
 [文献 1](https://blog.csdn.net/tdcqfyl/article/details/109599321?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522167351497316800213021507%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=167351497316800213021507&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-1-109599321-null-null.142^v70^one_line,201^v4^add_ask&utm_term=goland%E9%85%8D%E7%BD%AEgin&spm=1018.2226.3001.4187)  

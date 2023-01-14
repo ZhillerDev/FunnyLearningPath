@@ -615,3 +615,72 @@ func main() {
 ```
 
 <br>
+
+#### 类
+
+不同包下的公私问题：
+若首字母大写，则表示私有，仅当前包可用；  
+若首字母小写，则表示公有，任何包可用；
+
+<br>
+
+如下代码实现了对结构体中的 name 属性的封装
+
+`src/test.go` 代码
+
+```go
+package src
+
+// Person 结构体大写，表示公有
+type Person struct {
+	// name 属性小写，仅当前包内可访问，私有
+	// 可把该属性视为private
+	name string
+}
+
+// 外部包只能通过这个setter方法来设置私有属性name！！！达到封装效果
+func (p *Person) SetName(name string) {
+	p.name = name
+}
+```
+
+`main.go` 代码
+
+```go
+package main
+
+import sc "golearn/src"
+
+func main() {
+	// 先实例化结构体
+	p := sc.Person{}
+	// 通过公开的setter方法来设置对象属性！
+	p.SetName("shit")
+}
+```
+
+<br>
+
+#### 继承
+
+结构体之间相互套娃即可达成继承关系
+
+```go
+type SuperClass struct {
+	Name string
+}
+type BaseClass struct {
+	SuperClass
+	Age int
+}
+```
+
+<br>
+
+子类可继承并使用父类的方法；  
+子类可重写父类中定义的方法；  
+只能子类访问父类，反过来不行；
+
+<br>
+
+#### 多态

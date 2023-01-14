@@ -684,3 +684,57 @@ type BaseClass struct {
 <br>
 
 #### 多态
+
+多态通过 interface 接口实现；
+
+src/test.go
+
+```go
+package src
+
+import "fmt"
+
+// 主接口
+type Animal interface {
+	Run()
+}
+
+// 定义两种动物
+type Dog struct {
+	Name string
+}
+type Cat struct {
+	Name string
+}
+
+// 为两种动物都实现同一个接口Run
+func (d Dog) Run() {
+	fmt.Println("dog run")
+}
+func (c Cat) Run() {
+	fmt.Println("cat run")
+}
+```
+
+main.go
+
+```go
+package main
+
+import src "golearn/src"
+
+func main() {
+	// 初始化接口
+	var a src.Animal
+	// 向下转型
+	a = src.Dog{Name: "shit"}
+	a.Run()
+	// 多态
+	a = src.Cat{Name: "tom"}
+	a.Run()
+}
+```
+
+<br>
+
+#### 异常处理

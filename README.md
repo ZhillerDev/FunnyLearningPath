@@ -6,7 +6,7 @@
 
 1. 安卓 android：jetpack ,jetpack compose, flutter, androidx
 2. 前端 frontend: vue, html, css, js, ts, wx, uni-app, node
-3. 后端 backend: spring5, springboot, springsecurity, servlet, jdbc, mybatis, mybatis-plus, redis, tomcat, nestjs
+3. 后端 backend: spring5, springboot, springsecurity, servlet, jdbc, mybatis, mybatis-plus, redis, tomcat, nestjs, gin, gorm
 4. 嵌入式 embedded: NFC
 5. 网安 cybersecurity: kali, linux
 6. 深度学习 python: novelai, YOLO

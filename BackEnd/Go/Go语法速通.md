@@ -411,6 +411,54 @@ func main() {
 
 <br>
 
+#### 日期时间函数
+
+```go
+func main() {
+	// 获取当前时间
+	var time time2.Time = time2.Now()
+	fmt.Println(time)
+	fmt.Println(time.Date())
+
+	// 获取时间戳（即1970.1.1到现在的秒数）
+	fmt.Println(time.Unix())
+
+	// 格式化输出时间
+	// 注意这里的格式化字符串是go固定的，不可以乱搞！
+	fmt.Println(time.Format("2006/01/02 15:04:05"))
+}
+```
+
+<br>
+
+#### 在 go 中使用 c 语言
+
+在 `import "C"` 上方紧贴着使用单行或者多行注释书写 C 语言代码，不得有多余无关注释以及空格空行！
+
+调用时直接使用 `C.XXX` 即可
+
+```go
+package main
+
+/*
+#include <stdio.h>
+void say(){
+	printf("god");
+}
+*/
+import "C"
+
+func main() {
+	C.say()
+}
+```
+
+<br>
+
+####
+
+<br>
+
 ### 进阶
 
 > 看到这里你是不是觉得像完全 0 基础学语言？看看这 nt 的语法吧！
@@ -738,3 +786,25 @@ func main() {
 <br>
 
 #### 异常处理
+
+```go
+func main() {
+	// 创建错误的方法一
+	var err error = fmt.Errorf("这是一个错误")
+	fmt.Println(err)
+
+	// 创建错误的方法二
+	var err2 error = errors.New("这也是一个错误")
+	fmt.Println(err2)
+}
+```
+
+<br>
+
+中断程序
+
+在代码中使用 panic 直接中断执行（譬如出现除数等于 0 的情况，可以使用中断）
+
+<br>
+
+恢复程序

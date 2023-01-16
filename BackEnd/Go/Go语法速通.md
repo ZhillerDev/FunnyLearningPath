@@ -455,6 +455,26 @@ func main() {
 
 <br>
 
+#### 类型断言
+
+对一个接口类型变量进行类型断言时，会解构为两个值，第二个值为 ok，若其等于 true 则表示类型断言成功，反之失败
+
+```go
+func m3(c *gin.Context) {
+	name, _ := c.Get("username")
+
+	// 进行类型断言
+	res, ok := name.(string)
+	if ok == true {
+		c.String(200, "请求成功"+res)
+	} else {
+		c.String(400, "请求失败")
+	}
+}
+```
+
+<br>
+
 ####
 
 <br>

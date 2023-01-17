@@ -1,13 +1,6 @@
----
-title: VueRouter简介
-date: 2022-06-10 14:32:10
-tags:
+### 基础使用
 
-categories:
-  - 前端
----
-
-### 标准通用模板
+#### 标准通用模板
 
 **src/router/index.ts**
 先从 vuerouter 中导入三大件；  
@@ -70,7 +63,7 @@ app.mount("#app");
 
 <br>
 
-### 脚本式导航
+#### 脚本式导航
 
 导入模块 useRouter 后，通过使用 push 方法来跳转到对应的路由页面，而不是用 router-link 标签！！！  
 下面展示了通过路由的 name 来跳转，当然也可以通过 path 来跳转
@@ -101,7 +94,7 @@ app.mount("#app");
 
 <br>
 
-### 历史记录
+#### 历史记录
 
 router-link 标签添加 replace 属性，即可不记录跳转历史
 
@@ -132,7 +125,7 @@ const toPage = (url: string) => {
 
 <br>
 
-### 路由传参
+#### 路由传参
 
 **query 传参**
 上层代码为发送参数的组件，下层代码为接收参数的组件；
@@ -183,7 +176,7 @@ const toPage = (url: string) => {
 
 <br>
 
-### 嵌套路由
+#### 嵌套路由
 
 需要定义定义路由中的 route；  
 添加 children 属性，然后可以无限嵌套下去，但要注意最终 path 是拼接而来的，即一层层向上链接！！
@@ -209,7 +202,7 @@ const routes: Array<RouteRecordRaw> = [
 
 <br>
 
-### 组件命名
+#### 组件命名
 
 当一个 component 具有多个成员时，可以对 route-view 添加属性 name，来指定需要显示那个成员！
 
@@ -232,7 +225,7 @@ const routes:Array<RouteRecordRaw> = [
 
 <br>
 
-### 路由别名
+#### 路由别名
 
 在 routes 中加入参数 alias 即可指定别名；  
 别名的作用：当使用 path 调用路由页面时，也可以直接使用别名代替；
@@ -252,7 +245,7 @@ const routes: Array<RouteRecordRaw> = [
 
 <br>
 
-### 前置路由守卫
+#### 前置路由守卫
 
 定义：路由守卫可以看做是一个筛选器，即根据访问者具有的权限来将其导航向不同的地址；  
 例如某访问者想访问后台，但很明显其权限不够，路由守卫立刻阻挡并驳回请求（或者将其导向另一个网址）；
@@ -277,13 +270,13 @@ router.beforeEach((to, from, next) => {
 
 <br>
 
-### 后置路由守卫
+#### 后置路由守卫
 
 使用方式和前置路由守卫差不多，只是方法名变了一下而已，他表示在路由 next()完成后执行的响应
 
 <br>
 
-### 路由元信息
+#### 路由元信息
 
 即路由自带的一个数据包，里面可以存储变量等内容；  
 使用 meta 定义，对象的形式！
@@ -305,4 +298,35 @@ export const router = createRouter({
 
 <br>
 
-###
+### 进阶操作
+
+#### 路由原理快速复习
+
+> 重点重点重点！！！建议直接看完然后上手项目开发，不然会困惑很久（特别是对于我这种笨蛋来说）
+
+众所周知，我们使用路由跳转必须要存在一个标签：`<router-view>`
+
+一般的，我们会直接令 App.vue 的 template 标签内只保留一个该标签；  
+此时我们无论在任何子组件中使用 push 或者 replace 切换路由，结果都会显示在 App.vue 的 router-view 标签内部（其实此刻就相当于全屏渲染新页面了，效果看起来和直接使用 a 标签进行页面跳转完全一致）；
+
+这样做我们完全不用在意什么父子组件传参！
+
+```html
+<!-- 这是App.vue的全部内容 -->
+<template>
+  <!-- 只保留这一个标签！！！ -->
+  <router-view></router-view>
+</template>
+
+<script setup></script>
+
+<style lang="less" scoped></style>
+```
+
+<br>
+
+#### 路由跳转动画
+
+vuerouter4 建议我们不要使用旧版的 transition 里面套 routerview 了，改为使用插槽；
+
+这里使用 animate.css 库制作动画

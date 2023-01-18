@@ -329,4 +329,4 @@ export const router = createRouter({
 
 vuerouter4 建议我们不要使用旧版的 transition 里面套 routerview 了，改为使用插槽；
 
-这里使用 animate.css 库制作动画
+这里使用 `animate.css` 库制作动画

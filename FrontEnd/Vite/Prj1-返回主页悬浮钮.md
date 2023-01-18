@@ -44,6 +44,26 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 <br>
 
+#### 计算属性介绍
+
+与 vue2 不同的是，vue3 中的计算属性可以直接写到一个变量中去，可以直接把他当成一个函数执行；
+
+计算属性返回的是一个值，而直接使用普通函数 return 返回的是一个函数类型！
+
+快速使用计算属性（需要从 vue 导入对应包）
+
+```js
+import { computed, ref } from "vue";
+
+const count = ref(1);
+const currentPath = computed(() => {
+  // 判断为true，计算属性返回true
+  return count === 1;
+});
+```
+
+<br>
+
 #### 悬浮按钮设计
 
 悬浮按钮实现的方法我目前只想到一种：elementplus 的固钉 affix 组件+绝对定位脱离文档流
@@ -52,13 +72,13 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 1. 按钮点击返回主页：获取路由实例，然后 push 一个 path 直接回到首页
 2. 动态禁用按钮：使用计算属性，判断当前路由值是多少，如果等于 index 那么就禁用，其余状态就不禁用
+3. 使用计算属性而不是普通函数是因为 disable 属性只能接受布尔值，直接用普通函数返回的是一个函数类型，会导致类型不匹配而无法成功
 
 <br>
 
 下面的代码完整的展示了按钮的设计
 
-固钉组件 `el-affix` 设计为紧贴顶部，且样式设置绝对定位，距离顶部和左侧分别 20px 距离，此时脱离文档流，不会干扰其余元素的渲染！
-
+固钉组件 `el-affix` 设计为紧贴顶部，且样式设置绝对定位，距离顶部和左侧分别 20px 距离，此时脱离文档流，不会干扰其余元素的渲染！  
 按钮组件 `el-button` 其中的属性 `disabled` 使用动态绑定，绑定一个计算方法，根据我们之前的思路来执行即可
 
 ```vue
@@ -83,6 +103,7 @@ import { computed, ref, reactive } from "vue";
 const router = useRouter();
 // 计算属性返回指定布尔值，判断是否应该禁用按钮
 const currentPath = computed(() => {
+  // 取出当前路由相对值的方法
   return router.currentRoute.value.path === "/";
 });
 // 返回主页的路由方法

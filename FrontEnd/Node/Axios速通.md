@@ -478,4 +478,148 @@ export default {
 
 <br>
 
-#### axios 请求中 then 作用域问题
+#### axios 请求中异步与否问题
+
+众所周知，axios 请求有些请求需要配合异步函数来实现，我大概总结了两种适配场景：
+
+不使用异步：后端响应值对后续操作无影响，我们仅需要判断这个请求是否成功的情况下  
+使用异步：我们需要存储后端响应值并使用它进行某些渲染操作
+
+<br>
+
+**不使用异步的例子**
+
+参考我们上一节的最后一块，我们抽离了登录校验的 axios 请求，这是具体代码
+
+可见，我们只需要把本地 token 传递给后端，经过后端 jwt 验证并返回一个成功状态码 200，既然成功了，自然就会执行 then 内的方法，此时我们无需对响应体做出任何判断都可以明确的知道此次登录验证是成功的，所以直接返回一个布尔值 true 即可
+
+这里就不需要使用到异步函数
+
+```js
+validateLogin: (url, uname, pwd) => {
+    // 使用post请求，请求体data即传入两个必要值
+    http
+      .post(url, {
+        username: uname,
+        password: pwd,
+      })
+      // 在then中处理请求成功的方法
+      .then((res) => {
+        console.log(res);
+        let token = res.data.msg;
+        localStorage.setItem("token", token);
+        fastMessage.success("成功登录！");
+      })
+      // 在catch中处理请求失败的方法
+      .catch((err) => {
+        fastMessage.error("用户名或密码错误！");
+        return false;
+      });
+
+    // 返回值有无取决于你的项目需求
+    return true;
+  },
+```
+
+<br>
+
+**使用异步的例子**
+
+一般的，在我们使用 axios 请求后端服务器时必定会有一小段往返时间，假设我们不使用异步函数，那么就会造成还没有取回响应体就直接返回了，那么必然会得到一个空值！
+
+使用 `try...catch...` 代码块处理响应成功与否，因为 catch 能捕获到任意层次深度的任意错误，故 axios 请求一旦失败则必被捕获！
+
+异步执行请求保证了我们获取的响应体值为后端数据，最后的 return 也能正确的返回带值变量
+
+```js
+import http from "./http.js";
+
+let userDatas;
+
+// 异步函数，发送后端查询数据库得到所有用户信息
+async function userDataQuery(url) {
+  try {
+    // 异步请求后端并拿到结构Promise
+    let res = await http.get(url);
+    // 将获取到的响应体中的值赋予给全局变量
+    userDatas = res.data.data;
+    console.log(userDatas);
+  } catch (err) {
+    console.log("这TMD是错的");
+  }
+  // 返回全局变量
+  return userDatas;
+}
+
+export default {
+  userDataQuery,
+};
+```
+
+<br>
+
+同志醒醒，这还没完，因为我们使用 async 构造异步函数，无论该函数返回啥，结果都是一个 promise 对象，我们只需要最后一步，对其进行数据提取并存储就完事了！！！
+
+请看模块的 script 部分代码：
+
+这里使用了 pinia 进行数据存储，setUsersList 是 actions 中的一个方法，它是用来设置 state 中的其中一个变量的值的，这一步操作下来即可把我们要的数据存储到 store 里面了！
+
+因为变量 datas 已被 reactive 响应式，故 store 的更新也会带动该变量的更新，同时带动对应渲染的更新
+
+```js
+import { onMounted, reactive, ref } from "vue";
+import apiQuery from "../../api/api-query.js";
+import dbStore from "../../store/db-store.js";
+
+const store = dbStore();
+let datas = reactive(store.$state.userLists);
+
+// 执行最后一步的promise处理
+apiQuery.userDataQuery("/sdb/allusers").then((res) => {
+  // 调用store中的方法直接把数据存储到status域中的变量
+  store.setUsersList(res);
+  // 随意输出一些内容作为验证
+  console.log(res);
+});
+```
+
+<br>
+
+#### 对象与数组转换
+
+执行异步 axios 请求时，对于 POST 类型的数据存储往往会遇到 formdata 是一个对象，而我们 vue 渲染时需要的偏偏就得是数组类型的
+
+这一步可以在 store 中的 actions 配置的方法里面进行处理  
+此处简单的使用了 foreach 把对象内容一一压入数组的方式实现，请注意每次执行该方法是变量值的配置！！！
+
+```js
+import { defineStore } from "pinia";
+import Names from "./names.js";
+
+const dbStore = defineStore(Names.DBSTORE, {
+  // 随意配置一个数组变量userLists
+  state: () => {
+    return {
+      userLists: [],
+    };
+  },
+
+  actions: {
+    // 设置变量的值，形参data即传来的对象object
+    setUsersList(data) {
+      // 转换前务必清空变量值，否则会造成值重复添加现象
+      this.userLists = [];
+      // foreach将对象中的值一个个取出来添加到数组里面
+      for (let i in data) {
+        console.log(data[i]);
+        this.userLists.push(data[i]);
+      }
+    },
+  },
+  getters: {},
+});
+
+export default dbStore;
+```
+
+<br>

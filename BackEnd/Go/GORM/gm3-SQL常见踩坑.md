@@ -17,3 +17,5 @@ preinit.DB.Exec("ALTER TABLE `user` MODIFY COLUMN `id` int NOT NULL AUTO_INCREME
 ```
 
 <br>
+
+

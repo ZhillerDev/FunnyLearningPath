@@ -343,6 +343,7 @@ server.interceptors.request.use(
 
 // 响应拦截器
 server.interceptors.response.use(
+  // 如果没错误就直接通过不拦截
   (config) => {
     return config;
   },
@@ -361,8 +362,10 @@ server.interceptors.response.use(
           ElMessage(STATUS.success.msg);
           break;
         default:
-          if (msg === "invalid token") {
-            ElMessage("登录状态过期，请重新登陆");
+          // 后端验证token无效，写到响应体里返回给前端
+          // 前端在此判定为无效，提示对应信息
+          if (msg === "invalid_token") {
+            ElMessage("token无效，请重新登陆");
           } else {
             ElMessage(msg);
           }
@@ -373,6 +376,7 @@ server.interceptors.response.use(
   }
 );
 
+// 导出拦截器供后续使用
 export default server;
 ```
 

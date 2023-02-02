@@ -1,6 +1,123 @@
 ### 快速上手
 
-安装：`github.com/spf13/viper`
+命令行下安装 viper：`go get github.com/spf13/viper`
+
+<br>
+
+这是完成后的文件结构图：
+
+`config.yaml` 配置主文件，可以使用任意后缀指定格式，这里以 yaml 做示范  
+`viper-init.go` 初始化 viper  
+`main.go` 入口
+
+![](../../img/go/plugins/viper/vp2.png)
+
+<br>
+
+**编写配置文件**
+
+首先我们简单的在配置文件内瞎写一些内容（注意冒号后面保留一个空格，这是 yaml 规范！）
+
+代码清单 `config.yaml`
+
+```yaml
+name: "tom"
+password: 123456
+```
+
+<br>
+
+**viper 初始化文件配置**
+
+之后来到 viper 初始化文件内编写初始化内容
+
+编写初始化方法 InitViper 之前务必指定一个结构体，它对应着我们配置文件内的所有属性  
+这方便我们后期通过结构体获取对应属性
+
+配置文件读取其实路径默认为项目根目录！！！
+
+代码清单：`viper-init.go`
+
+```go
+package viper
+
+import (
+	"fmt"
+	"github.com/spf13/viper"
+	"log"
+)
+
+// 结构体，对应配置文件所有属性
+type Config struct {
+	// mapstructure表示配置文件内属性的名称
+	// 而Name则是结构体中定义的名字！
+	Name string `mapstructure:"name"`
+	Password int `mapstructure:"password"`
+}
+
+// viper初始化代码，返回一个Config指针对象
+func InitViper() *Config  {
+	// 实例化空结构体
+	cf := Config{}
+	// 从指定路径读取配置文件
+	viper.SetConfigFile("./src/viper/config.yaml")
+
+	// 开始读配置文件，并处理错误情况
+	err := viper.ReadInConfig()
+	if err != nil{
+		log.Fatal("找不到该文件！")
+	}
+
+	fmt.Println("成功初始化viper")
+
+	// 返回地址
+	return &cf
+}
+```
+
+<br>
+
+**入口文件**
+
+最后直接在入口文件里面调用就好啦！
+
+我这里随便写了最基础的 gin 环境，请注意 viper 初始化方法的执行位置必须在 service 层之前！  
+你不初始化怎么获取到配置文件然后拿来用呢，对吧？
+
+代码清单 main.go
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"godemo/src/viper"
+)
+
+func main() {
+	router := gin.Default()
+
+	// 切记初始化viper再调用！！！
+	config := viper.InitViper()
+
+	router.GET("/test", func(context *gin.Context) {
+		context.JSON(200,gin.H{
+			"name":config.Name,
+		})
+	})
+
+	err := router.Run(":10086")
+	if err != nil {
+		return
+	}
+}
+```
+
+<br>
+
+### 另一种配置方式
+
+> 该配置方式省去了编写结构体的冗余步骤，比较方便
 
 <br>
 
@@ -73,5 +190,3 @@ func main() {
 ```
 
 <br>
-
-####

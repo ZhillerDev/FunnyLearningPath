@@ -8,6 +8,19 @@
 
 <br>
 
+安装适用于kotlin的navigation依赖  
+
+```kotlin
+dependencies {
+  def nav_version = "2.5.3"
+
+  implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+  implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+}
+```
+
+<br>
+
 #### 编写欲跳转的两个页面
 
 编写 Demo1 页面

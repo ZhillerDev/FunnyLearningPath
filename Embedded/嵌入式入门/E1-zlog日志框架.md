@@ -45,3 +45,75 @@ int main(int argc, char const *argv[])
 ```
 
 <br>
+
+### zlog
+
+#### 低配手写模拟版
+
+这里借助我们刚刚学到的变参宏手写一个最简单的 zlog 日志框架，可以实现指定 LOG 等级输出内容，低于该等级的无法输出
+
+不难发现宏 LOG_LEVEL 定义了整个文档的 LOG 等级，只要我们选择输出的 LOG 等级大于或等于该等级，那么就可以输出
+
+```c
+#include <stdarg.h>
+#include <stdio.h>
+
+#define OPEN_LOG 1
+#define LOG_LEVEL LOG_DEBUG
+
+// 定义所有LOG等级
+typedef enum
+{
+    LOG_DEBUG = 0,
+    LOG_INFO = 1,
+    LOG_WARN = 2,
+    LOG_ERROR = 3
+} E_LOGLEVEL;
+
+// 获取当前的LOG等级
+char *EM_LOGLevelGet(const int level)
+{
+    switch (level)
+    {
+    case LOG_DEBUG:
+        return "DEBUG";
+    case LOG_INFO:
+        return "INFO";
+    case LOG_WARN:
+        return "WARNING";
+    case LOG_ERROR:
+        return "ERROR";
+
+    default:
+        return "UNKNOWN";
+    }
+}
+
+// 解析参数
+void EM_LOG(const int level, const char *fmt, ...)
+{
+#ifdef OPEN_LOG
+    va_list arg;
+    va_start(arg, fmt);
+
+    // vsnprintf用于将文本塞到buff缓冲区
+    char buf[1 + vsnprintf(NULL, 0, fmt, arg)];
+    vsnprintf(buf, sizeof(buf), fmt, arg);
+    va_end(arg);
+
+    // 若当前形参LOG等级大于全局LOG等级，那么就允许输出
+    if (level >= LOG_LEVEL)
+    {
+        printf("[%s] %s\n", EM_LOGLevelGet(level), buf);
+    }
+#endif
+}
+
+int main(int argc, char const *argv[])
+{
+    EM_LOG(LOG_DEBUG, "app start");
+    return 0;
+}
+```
+
+<br>

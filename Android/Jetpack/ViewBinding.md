@@ -1,4 +1,4 @@
-### ViewBinding
+### 标准项目中使用 Viewbinding
 
 > 因为 kotlin-android-extensions 被废弃了，且官方建议我们使用 viewbinding
 

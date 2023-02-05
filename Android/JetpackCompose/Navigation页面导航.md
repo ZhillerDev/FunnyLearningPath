@@ -403,3 +403,120 @@ Button(onClick = {
 ```
 
 <br>
+
+### Scaffold 导航案例
+
+> 这里仅仅展示 scaffold 以及 navhost 的主要编写，至于定义页面啥的可以看前面的快速上手部分
+
+<br>
+
+实现目标：使用 scaffold 定义底部导航，写三个子页面，每点击一个导航按钮就自动切换到对应的子页面
+
+<br>
+
+代码清单：`MainNav.kt`
+
+这里把 `NavHostController` 从原本的 `navhost` 主方法中抽离出来，并配合延后初始化，这样子就可以直接通过 setter 方法修改导航！！！
+
+```kotlin
+// 把NavHostController延迟初始化并定义其为私有局部的
+// 注解是intellij自己加的，我也不知道有什么用
+@SuppressLint("StaticFieldLeak")
+private lateinit var navControllerObject: NavHostController
+
+// navhost主体，不解释！
+@Composable
+fun NavHostMain() {
+    // 在这里对NavHostController进行初始化
+    navControllerObject = rememberNavController()
+    NavHost(navController = navControllerObject, startDestination = RouteConfig.R_INDEX) {
+        composable(RouteConfig.R_INDEX) {
+            IndexViewInit(navControllerObject)
+        }
+        composable(RouteConfig.R_INFO) {
+            InfoViewInit(navControllerObject)
+        }
+        composable(RouteConfig.R_SETTING) {
+            SettingViewInit(navControllerObject)
+        }
+    }
+}
+
+// setter方法，设置当前路由！
+fun navChangePath(path: String) {
+    navControllerObject.navigate(path)
+}
+```
+
+<br>
+
+代码清单 `MainActivity.kt`
+
+先在 scaffold 布局的 body 塞入 navhost 主体方法，`类似于 vue 的 routerview`，即在这里显示路由内容！
+
+之后在底部按钮点击事件中运行 setter 方法，修改 path，实现路由跳转即可
+
+```kotlin
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            AidtTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colors.background
+                ) {
+                    // 在这里调用scaffold
+                    mainBody()
+                }
+            }
+        }
+
+    }
+}
+
+data class Item(val name: String, val icon: Int, val route: String)
+
+@Composable
+private fun mainBody() {
+    var selectedItem by remember {
+        mutableStateOf(0)
+    }
+    val items = listOf(
+        Item("主页", R.drawable.ic_home, RouteConfig.R_INDEX),
+        Item("列表", R.drawable.ic_user, RouteConfig.R_INFO),
+        Item("设置", R.drawable.ic_pwd, RouteConfig.R_SETTING)
+    )
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigation {
+                items.forEachIndexed { index, item ->
+                    BottomNavigationItem(
+                        selected = selectedItem == index,
+
+                        // 每次点击一次导航按钮，就使用setter方法修改path
+                        // 从而实现路由切换
+                        onClick = {
+                            selectedItem = index
+                            navChangePath(item.route)
+                        },
+                        icon = { Icon(painterResource(item.icon), null) },
+                        alwaysShowLabel = false,
+                        label = { Text(item.name) }
+                    )
+                }
+            }
+        }
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            NavHostMain()   // 调用navhost主方法，在这里显示路由内容
+        }
+    }
+}
+```
+
+<br>

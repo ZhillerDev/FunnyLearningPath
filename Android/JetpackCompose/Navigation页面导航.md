@@ -8,14 +8,11 @@
 
 <br>
 
-安装适用于kotlin的navigation依赖  
+安装适用于 kotlin 的 navigation 依赖
 
 ```kotlin
 dependencies {
-  def nav_version = "2.5.3"
-
-  implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
-  implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+    implementation("androidx.navigation:navigation-compose:2.4.1")
 }
 ```
 

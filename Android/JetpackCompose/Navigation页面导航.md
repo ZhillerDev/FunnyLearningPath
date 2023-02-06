@@ -404,6 +404,24 @@ Button(onClick = {
 
 <br>
 
+### 踩坑与优化封装
+
+#### 清空返回栈并前往
+
+先清空再前往，就达成了这个方法（还没有做优化，估计后续会搞）
+
+```kotlin
+// 清除所有返回栈并前往指定路由
+fun navClearStack(path:String){
+    // 首先清空返回栈
+    navControllerObject.popBackStack(path,true)
+    // 然后在navigate导航到指定路由地址！
+    navControllerObject.navigate(path)
+}
+```
+
+<br>
+
 ### Scaffold 导航案例
 
 > 这里仅仅展示 scaffold 以及 navhost 的主要编写，至于定义页面啥的可以看前面的快速上手部分

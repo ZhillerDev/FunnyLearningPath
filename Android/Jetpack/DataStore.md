@@ -8,6 +8,10 @@ DataStore 可以存储两种类型的数据，一种是 preference，一种是 p
 
 <br>
 
+默认存储位置：`data/data/com.xxx.xxx/files/datastore/xxx.pb`
+
+<br>
+
 ### 快速上手
 
 导入依赖：`implementation "androidx.datastore:datastore-preferences:1.0.0"`

@@ -24,7 +24,7 @@ fun IndexViewInit(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
 
             // 瀑布流列数，这里固定为1列
-            cells = GridCells.Fixed(1),
+            columns = GridCells.Fixed(1),
 
             // 元素之间的水平与垂直间隙
             verticalArrangement = Arrangement.spacedBy(16.dp),

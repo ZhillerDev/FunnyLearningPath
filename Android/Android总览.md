@@ -27,3 +27,20 @@ implementation "com.google.accompanist:accompanist-systemuicontroller:0.15.0"
 ```
 
 <br>
+
+Glide 依赖
+
+```
+implementation 'com.github.bumptech.glide:glide:4.11.0'
+annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
+```
+
+<br>
+
+DataStore 依赖
+
+```
+implementation "androidx.datastore:datastore-preferences:1.0.0"
+```
+
+<br>

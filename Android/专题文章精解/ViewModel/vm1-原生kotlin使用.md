@@ -1,4 +1,4 @@
-### ViewModel 基本
+### ViewModel 原生支持 kotlin 案例
 
 #### 基本案例
 
@@ -128,21 +128,3 @@ override fun onCreate(savedInstanceState: Bundle?) {
     ...
 }
 ```
-
-### 零散知识点
-
-#### 协程作用域
-
-viewModelScope 定义 viewmodel 专属协程作用域
-
-当 viewmodel 失效后，该作用域自动失效
-
-```kotlin
-private fun getMarsPhotos() {
-    viewModelScope.launch {
-
-    }
-}
-```
-
-<br>

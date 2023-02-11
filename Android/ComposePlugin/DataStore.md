@@ -20,8 +20,7 @@ DataStore 可以存储两种类型的数据，一种是 preference，一种是 p
 
 #### 目标
 
-将三个属性 name、age、habit 按照键值对的方式使用 preference 模式存储到本地
-
+将三个属性 name、age、habit 按照键值对的方式使用 preference 模式存储到本地  
 实现查询功能
 
 <br>

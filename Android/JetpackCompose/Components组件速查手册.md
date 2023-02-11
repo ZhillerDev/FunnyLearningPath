@@ -112,3 +112,49 @@ fun PasswordField() {
 ```
 
 <br>
+
+### Image
+
+#### 圆形非拉伸头像图片
+
+当我们直接使用 clip 裁剪图片时，为避免因为图片比例问题发生拉伸，可以使用 contentScale 属性避免这一情况的发生！
+
+```kotlin
+Image(
+    painter = painterResource(drawable),
+    contentDescription = null,
+
+    // Crop非拉伸图片，FillBounds拉伸图片
+    contentScale = ContentScale.Crop,
+    modifier = Modifier
+        .size(88.dp)
+        .clip(CircleShape)  // 圆形裁剪
+)
+```
+
+<br>
+
+### LazyLayout
+
+#### 避免内边距截断
+
+![](https://developer.android.com/static/codelabs/jetpack-compose-layouts/img/6b3f390040e2b7fd.gif?hl=zh-cn)
+
+为避免出现上图的情况，添加 contentPadding 属性，给予一个内边距，就可以避免
+
+```kotlin
+@Composable
+fun AlignYourBodyRow(
+   modifier: Modifier = Modifier
+) {
+   LazyRow(
+       // 避免内边距截断
+       contentPadding = PaddingValues(horizontal = 16.dp),
+       modifier = modifier
+   ) {
+       ...
+   }
+}
+```
+
+<br>

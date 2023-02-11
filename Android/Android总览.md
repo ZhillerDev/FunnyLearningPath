@@ -14,6 +14,26 @@
 
 <br>
 
+### 踩坑总览
+
+#### AGP 版本不匹配
+
+如果我们从官网下载某些成品模板，对 gradle 进行 sync 时，会出现 AGP 版本不匹配报错
+
+直接来到 build.gradle(project:app) 文件内
+
+修改以下两行后面的版本号为你当前所能支持的 AGP 版本就可以了
+
+```
+plugins {
+    id 'com.android.application' version '7.3.0' apply false
+    id 'com.android.library' version '7.3.0' apply false
+    ...
+}
+```
+
+<br>
+
 ### 依赖大全
 
 #### 页面 UI

@@ -11,6 +11,32 @@
 
 <br>
 
+#### isScrollingUp
+
+再开始工作之前，需要为 LazyListState 自己编写一个扩展方法 isScrollingUp，用来检测当前滚动方向
+
+```kotlin
+@Composable
+private fun LazyListState.isScrollingUp(): Boolean {
+    var previousIndex by remember(this) { mutableStateOf(firstVisibleItemIndex) }
+    var previousScrollOffset by remember(this) { mutableStateOf(firstVisibleItemScrollOffset) }
+    return remember(this) {
+        derivedStateOf {
+            if (previousIndex != firstVisibleItemIndex) {
+                previousIndex > firstVisibleItemIndex
+            } else {
+                previousScrollOffset >= firstVisibleItemScrollOffset
+            }.also {
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+            }
+        }
+    }.value
+}
+```
+
+<br>
+
 #### FAB
 
 定义一个 FAB 组件，使用 `FloatingActionButton` 可以便于自定义

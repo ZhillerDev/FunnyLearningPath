@@ -82,9 +82,3 @@ let changeMode = (id) => {
 ```
 
 <br>
-
-### 配置文件
-
-> 详解 vite.config.ts 的具体参数
-
-<br>

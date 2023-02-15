@@ -117,3 +117,9 @@ class MainActivity : ComponentActivity() {
 <br>
 
 ### 成品测试
+
+开始会出现加载条，加载完毕显示卡片
+
+![](../../imgs/prj/potter/p7.png)
+
+<br>

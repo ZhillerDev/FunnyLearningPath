@@ -1,12 +1,3 @@
----
-title: JavaScript高级概念分析
-date: 2022-06-06 12:19:48
-tags:
-
-categories:
-  - 前端
----
-
 ### 原型模式
 
 **Object.defineProperty**

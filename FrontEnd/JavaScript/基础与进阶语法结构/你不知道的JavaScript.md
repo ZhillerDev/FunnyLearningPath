@@ -1,12 +1,3 @@
----
-title: 你不知道的JavaScript
-date: 2022-07-22 09:25:02
-tags:
-
-categories:
-  - 前端面试八股
----
-
 ### 作用域与闭包
 
 #### LHS 引用与 RHS 引用
@@ -853,4 +844,3 @@ foo(); // hello world
 <br>
 
 ### 程序性能
-

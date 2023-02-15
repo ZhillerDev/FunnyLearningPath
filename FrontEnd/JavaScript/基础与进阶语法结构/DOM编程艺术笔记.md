@@ -1,12 +1,3 @@
----
-title: DOM编程艺术笔记
-date: 2022-07-20 13:20:41
-tags:
-
-categories:
-  - 前端
----
-
 ### DOM 解释
 
 `DOM` 文档对象模型

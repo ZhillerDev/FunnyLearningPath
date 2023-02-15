@@ -120,14 +120,24 @@ apply plugin: 'kotlin-kapt'
 // android
 // 定义所有模块构建设置
 android {
+
+    // 定义编译SDK
+    // 表示你的项目可以使用低于（或等于）该版本的所有API
     compileSdk 32
 
+    // 定义默认配置
     defaultConfig {
+        // 工件ID
         applicationId "com.example.character"
+        // 最低可接受SDK版本
         minSdk 21
+        // 最高可接受SDK版本
         targetSdk 32
+        // 给开发者看的项目版本
         versionCode 1
+        // 给客户看的项目版本
         versionName "1.0"
+
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -135,12 +145,16 @@ android {
         }
     }
 
+    // 定义构建类型
+    // 默认的构建类型有两种：debug(构建时会默认打上debug签名) release(构建时默认不打任何签名)
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    // 如果你用的是JDK8，那么请添加这个两个配置以提供支持
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -148,12 +162,16 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    // 构建特性
     buildFeatures {
         compose true
     }
+    // compose设置
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
     }
+    // 资源文件配置
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
@@ -161,6 +179,8 @@ android {
     }
 }
 
+// 在这里直接把你需要添加的依赖贴进去就好了
+// 贴完后点sync即可
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.7.0'
@@ -200,3 +220,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:1.4.0")
 }
 ```
+
+> 三大主要文件全部讲完了，后续将提供打包过程以及对应签名等内容
+
+<br>

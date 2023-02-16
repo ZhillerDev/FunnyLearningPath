@@ -4,6 +4,26 @@
 
 <br>
 
+#### 解决 gradle 下载龟速问题
+
+直接打开 `build.gradle(project:app)`  
+添加以下库
+
+```groovy
+buildscript {
+    ...
+
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/central' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
 #### 项目结构
 
 这是一个标准的 gradle 项目结构

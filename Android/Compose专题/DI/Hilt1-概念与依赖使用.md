@@ -79,9 +79,90 @@ lateinit var repo: CharacterRepo
 
 <br>
 
-#### modules
+#### scope
+
+只有对类或者方法添加 scope 注解，他们才会被标记为 scope 类型，其余的均会视为非 scope 类型
+
+非 scope 类型：每次都会实例化；  
+scope 类型：全局仅实例化一次，后续调用均为同一个实例；
+
+```kotlin
+// 仅注入，非scope类型
+class UnscopedBinding @Inject constructor() {
+}
+
+// 注入且属于scope类型
+@FragmentScoped
+class ScopedBinding @Inject constructor() {
+}
+```
+
+> 不要轻易地对任何类或者方法设置为 scope，则可能会消耗较大运行时内存，请视情况而定
+
+<br>
+
+#### module
+
+原理：定义一个 hilt 模块，在模块内进行各个对象的实例化操作，与此同时指定的装配位置表示该模块的作用域
+
+可以把添加了@Provides 注释的方法看成延后初始化，即这是一个完整的工作流程：
+
+1. 在一个 hilt 模块内使用@Provides 实例化对象 A
+2. 在任意注入类 B 内使用@Inject 定义一个延后初始化对象 A
+3. 实例化过程在 hilt 模块内执行
+4. 注入类 B 内直接可以调用延后初始化对象 A，而无需在自身进行初始化
+5. (说白了，就是将初始化的流程交予 hilt 模块执行，在指定作用域内只需要延后初始化并调用就行了)
+
+`@Module` 定义一个 hilt 模块，模块可以有多个，用来告知 hilt 应该如何提供实例
+
+`@InstallIn` 定义模块装配位置，每个模块都必须存在此注解
+
+`@Provides` 相当于模块专属的@Inject 注解，并且它不受 private 的限制，他标注的方法存在固定格式，请看下方代码注释
+
+```kotlin
+@Module
+@InstallIn(ActivityComponent::class)
+object HiltDemoAppModule {
+
+    // @Provides注解的固定方法格式
+    // 方法名：provider+欲实例化的类名
+    // 返回值：欲实例化的类名
+    // 方法体：return 实例
+    @Provides
+    fun providerHiltTest():HiltTest{
+        return HiltTest("tom")
+    }
+
+}
+```
+
+<br>
+
+常见装配位置：
+
+| 装配名             | 装配位置    |
+| ------------------ | ----------- |
+| SingletonComponent | Application |
+| ViewModelComponent | ViewModel   |
+| ActivityComponent  | Activity    |
+| FragmentComponent  | Fragment    |
+
+<br>
 
 ### 添加依赖
+
+#### 兼容性校验
+
+根据多次测试，发现 hilt 版本过高会直接与 lifecycle 产生冲突，目前得出以下完善的解决方案：
+
+`hilt` 以及 `hilt-plugin` 均使用 2.38.1 版本  
+`lifecycle` 除了 `lifecycle-viewmode` 使用 2.4.0 之外，其余依赖可以使用 2.5.1 及以下版本
+
+> 不要使用 hilt2.45，运行直接冲突报错
+
+<br>
+
+#### 依赖安装主流程
 
 hilt 除了添加其本体以及 dagger 之外，还需要配置 hilt-gradle-plugin，这个比较麻烦  
 配置 hilt 插件是因为这可以加快我们的注解开发速度
@@ -119,7 +200,7 @@ pluginManagement {
     resolutionStrategy{
         eachPlugin{
             if (requested.id.id == 'dagger.hilt.android.plugin'){
-                useModule("com.google.dagger:hilt-android-gradle-plugin:2.45")
+                useModule("com.google.dagger:hilt-android-gradle-plugin:2.38.1")
             }
         }
     }
@@ -133,8 +214,8 @@ pluginManagement {
 ```groovy
 dependencies {
     // dagger -hilt
-    implementation "com.google.dagger:hilt-android:2.45"
-    kapt "com.google.dagger:hilt-android-compiler:2.45"
+    implementation "com.google.dagger:hilt-android:2.38.1"
+    kapt "com.google.dagger:hilt-android-compiler:2.38.1"
     kapt "androidx.hilt:hilt-compiler:1.0.0"
 }
 ```

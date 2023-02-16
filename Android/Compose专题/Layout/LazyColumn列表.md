@@ -31,7 +31,7 @@ LazyColumn(state = lazyState) {
 
 > 下面代码渲染后如图
 
-![](../imgs/compose/lazycolumn/lc1.png)
+![](../../imgs/compose/lazycolumn/lc1.png)
 
 <br>
 

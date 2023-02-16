@@ -8,7 +8,7 @@
 
 首先在 drawable 文件夹内，添加几张 vector images，用作我们的底部导航栏图标
 
-![](../imgs/compose/scaffold/sc1.png)
+![](../../imgs/compose/scaffold/sc1.png)
 
 <br>
 
@@ -149,7 +149,7 @@ fun mainBody() {
 
 ```
 
-![](../imgs/compose/scaffold/sc2.png)
+![](../../imgs/compose/scaffold/sc2.png)
 
 <br>
 

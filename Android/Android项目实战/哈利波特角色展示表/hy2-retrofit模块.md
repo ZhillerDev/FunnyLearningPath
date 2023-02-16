@@ -142,14 +142,15 @@ class CharacterRepo @Inject constructor(
 
 ### 定义 ApiModule
 
-在 apimodule 中处理所有的依赖关系，实例化单例对象
+定义一个 hilt 模块 `CharacterApiModule`  
+该模块使用单例模式，故指定 @InstallIn 为 SingletonComponent
 
 部分注解介绍：
 
-1. @Module 标注当前类为 apimodule
-2. @InstallIn 标注类类型
-3. @Provides 提供
-4. @Singleton 表示为单例模式
+1. @Module 定义一个 hilt 模块
+2. @InstallIn 定义该模块的作用域
+3. @Provides 注入，效果等同于@Inject
+4. @Singleton 定义其为单例
 
 代码清单：`di/CharacterApiModule.kt`
 

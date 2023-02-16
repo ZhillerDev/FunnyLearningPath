@@ -101,7 +101,7 @@ class ScopedBinding @Inject constructor() {
 
 <br>
 
-#### module
+#### @Module
 
 原理：定义一个 hilt 模块，在模块内进行各个对象的实例化操作，与此同时指定的装配位置表示该模块的作用域
 
@@ -146,6 +146,83 @@ object HiltDemoAppModule {
 | ViewModelComponent | ViewModel   |
 | ActivityComponent  | Activity    |
 | FragmentComponent  | Fragment    |
+
+<br>
+
+#### @Binds
+
+之前说过，@Provides 是用来注入方法的，而这个@Binds 是用来注入接口的
+
+首先定义接口及其对应的实现类
+
+```kotlin
+// 定义简单接口
+interface HiltTestInterface {
+    fun getUserName():String
+}
+
+// 实现类记得注入！
+class HiltTestInterfaceImpl @Inject constructor():HiltTestInterface{
+    override fun getUserName(): String {
+        return "jack"
+    }
+}
+```
+
+<br>
+
+紧接着新建一个 hilt 模块，该模块定义为抽象类而不是单例
+
+其中的注入方式全部使用 @Binds 注解
+
+```kotlin
+@Module
+@InstallIn(ActivityComponent::class)
+abstract class HiltDemoInterfaceAppModule {
+    @Binds
+    abstract fun providerHiltTestInterface(impl: HiltTestInterfaceImpl):HiltTestInterface
+}
+```
+
+> 使用方式和@Providers 一样，都是延后初始化然后调用
+
+<br>
+
+#### 单例模块
+
+@InstallIn 指定作用域为 SingletonComponent
+
+之后为每一个注入的方法都添加@Singleton 注解即可
+
+这在实例化 retrfit 的 builder 时很实用！
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+object HiltSingletonAppModule {
+    @Provides
+    @Singleton
+    fun providerHiltTest():HiltTest{
+        return HiltTest("tom")
+    }
+}
+```
+
+<br>
+
+#### 配合 viewmodel
+
+hilt 为 viewmodel 提供了一个专属的注解：@HiltViewModel
+
+```kotlin
+@HiltViewModel
+class HomeViewModel @Inject constructor() : ViewModel() {
+    ...
+}
+```
+
+调用该 viewmodel 时按照常规方法来就可以，无需做特殊处理  
+`val homeViewModel = viewModel(modelClass = HomeViewModel::class.java)`
 
 <br>
 

@@ -4,7 +4,7 @@
 
 文件夹对应技术主题：
 
-1. 安卓 android：jetpack ,jetpack compose, flutter, androidx
+1. 安卓 android：jetpack, compose, flutter, hilt, retrofit
 2. 前端 frontend: vue, html, css, js, ts, wx, uni-app, node
 3. 后端 backend: spring5, springboot, springsecurity, servlet, jdbc, mybatis, mybatis-plus, redis, tomcat, nestjs, gin, gorm
 4. 嵌入式 embedded: NFC
@@ -21,3 +21,5 @@
 大家如果喜欢的话可以 star 一下呜呜呜呜呜；
 
 坚持日更，完善技术面
+
+欢迎大佬一起讨论技术~

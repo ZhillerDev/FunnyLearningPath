@@ -14,7 +14,7 @@ echo =================
 set /p inp=your choice:
 if "%inp%"=="asd"  (
 git add .
-git commit -m "push now!"
+git commit -m "update"
 git push
 echo+
 echo+

@@ -1,3 +1,51 @@
+### 前言
+
+transition 是为了同步多个动画之间关系的，并不仅仅是为了做组件移动或者形态变化的！
+
+<br>
+
+### updateTransition
+
+`updateTransition` 用来管理多个动画同时进行
+
+需求：点击 Box，实现高度变高以及蓝色变成红色的两个动画，且动画同时进行
+
+下面为完整代码，为便于理解，这是我们使用 updateTransition 的基本步骤：
+
+1. 因为 Box 的完整状态只有两个，分别是收缩和展开，那么就先定义一个可变状态 isExpanded 以布尔值表示
+2. 使用 updateTransition 记住 isExpanded，每当其变化时都会触发一次更新事件
+3. 借助委托方法扩展 transition 的动画，其中的 lambda 中的形参就是我们在 updateTransition 中绑定的状态
+4. 将队员扩展后的变量导入到组件内部
+
+```kotlin
+@Composable
+fun TransitionBoxSizeComp() {
+    var isExpanded by remember {
+        mutableStateOf(false)
+    }
+    val transition = updateTransition(targetState = isExpanded, label = "trans")
+
+    val color by transition.animateColor(label = "") {
+        if (it) Color.Red else Color.Blue
+    }
+    val size by transition.animateDp(label = "") {
+        if (it) 120.dp else 60.dp
+    }
+
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(color)
+            .height(size)
+            .clickable {
+                isExpanded = !isExpanded
+            }
+    )
+}
+```
+
+<br>
+
 ### 简单切换动画
 
 > 需求：给予一个元素，在不同 tab 之间点击时，该元素以动画的形式移动到指定 tab 范围内

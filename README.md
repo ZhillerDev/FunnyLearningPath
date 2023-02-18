@@ -13,6 +13,7 @@
 7. 软开 software: qt, pyqt
 8. 设计 design: blender, illustrator, photoshop
 9. 游戏开发 unity
+10. 鸿蒙系统开发 harmony
 
 <br>
 

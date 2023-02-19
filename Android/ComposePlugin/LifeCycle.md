@@ -32,7 +32,7 @@ dependencies {
 
 ### 监听一个 Activity
 
-新建文件 MyObs.kt 为我们的自定义 lifecycle 文件  
+新建文件 `MyObs.kt` 为我们的自定义 lifecycle 文件  
 你可以选择性重写你想要用到的钩子
 
 ```kotlin

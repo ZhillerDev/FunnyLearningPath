@@ -73,4 +73,55 @@ app.config.globalProperties.$echarts = echarts;
 
 <br>
 
+或者使用 vue2 的写法，更加简便
+
+```html
+<template>
+  <div class="container">
+    <div class="left">
+      <div class="echarts-div" id="demo"></div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import * as echarts from "echarts";
+
+  export default {
+    name: "App",
+    mounted() {
+      this.showBar();
+    },
+    methods: {
+      showBar() {
+        var chart = echarts.init(document.getElementById("demo"));
+
+        let option = {
+          title: {
+            text: "ECharts 入门示例",
+          },
+          tooltip: {},
+          legend: {
+            data: ["销量"],
+          },
+          xAxis: {
+            data: ["衬衫", "羊毛衫", "雪纺衫", "裤子", "高跟鞋", "袜子"],
+          },
+          yAxis: {},
+          series: [
+            {
+              name: "销量",
+              type: "bar",
+              data: [5, 20, 36, 10, 10, 20],
+            },
+          ],
+        };
+
+        chart.setOption(option);
+      },
+    },
+  };
+</script>
+```
+
 ####

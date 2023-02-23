@@ -343,6 +343,29 @@ themeConfig: {
 
 <br>
 
+#### aside 右侧栏
+
+![](../imgs/vite/vitepress/vp5.png)
+
+同时设定：`aside:true`以及`outline:'deep'`，即可为每一篇文章自动于按照标题等级划分索引，并在右侧悬浮显示对应链接（如上图右侧）
+
+`outlineTitle` 可以自定义右侧 aside 的标题，一旦设定则全部文章都会显示该标题，而不是显示文章原始标题
+
+```js
+themeConfig: {
+  // aside，设定为false将关闭右侧栏，文档内容会填充剩余空白部分
+  aside: true,
+  // outline设置为deep可以解析2-6层深度的标题嵌套
+  outline: "deep",
+  // 暂时没发现这个属性有啥用
+  outlineBadges: true,
+  // 设置所有aside的标题
+  outlineTitle: "just an demo",
+}
+```
+
+<br>
+
 #### 完整代码
 
 ```js
@@ -405,6 +428,10 @@ export default {
     },
   },
   cleanUrls: true,
+  aside: true,
+  outline: "deep",
+  outlineBadges: true,
+  outlineTitle: "just an demo",
 };
 ```
 

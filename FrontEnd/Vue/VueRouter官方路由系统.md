@@ -329,4 +329,31 @@ export const router = createRouter({
 
 vuerouter4 建议我们不要使用旧版的 transition 里面套 routerview 了，改为使用插槽；
 
-这里使用 `animate.css` 库制作动画
+按照以下方法可以实现路由切换时页面消失后显示过渡动画
+
+```html
+<template>
+  <!-- 模板，直接套用即可 -->
+  <router-view v-slot="{ Component }">
+    <transition name="fade" mode="out-in">
+      <keep-alive>
+        <component :is="Component" />
+      </keep-alive>
+    </transition>
+  </router-view>
+</template>
+
+<script setup></script>
+
+<style lang="less" scoped>
+  /* 在这里定义路由切换时入场和出场的动画 */
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.2s ease;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+</style>
+```

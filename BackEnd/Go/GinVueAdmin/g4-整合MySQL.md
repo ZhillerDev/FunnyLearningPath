@@ -74,9 +74,9 @@
 ### 数据库准备
 
 这是我本地使用的数据库参数：
-username:root  
-password:123456  
-dbname:golang
+`username:root`  
+`password:123456`  
+`dbname:golang`
 
 这是数据库“golang”中的数据表 user 的数据，注意到有四个属性
 

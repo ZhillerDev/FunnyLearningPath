@@ -1,3 +1,22 @@
+### 概念
+
+#### 基本定理
+
+`开发环境（Development）` 下基于浏览器原生 ES Module 开发，无打包概念  
+`生产环境（Production）` 下基于 Rollup 打包来构建代码
+
+`Vite` 在`开发环境冷启动`无需打包，无需分析模块之间的依赖，同时也无需在启动开发服务器前进行编译，启动时还会使用 `esbuild` 来进行预构建
+
+`vite` 配置了预设开发环境，开箱即获得一堆功能，包括：`css 预处理、html 预处理、异步加载、分包、压缩、HMR 支持、默认 chunk hash 命名`
+
+<br>
+
+vite 的生态性：
+`与 Vue 解耦`，兼容支持 React、Svelte、Preact、Vanilla  
+`与 Rollup 极其接近的插件接口`，代表可以复用 Rollup 生态中的工具
+
+<br>
+
 ### 数值问题
 
 #### .env 环境变量配置

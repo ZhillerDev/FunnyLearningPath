@@ -287,6 +287,135 @@ app.mount("#app");
 
 <br>
 
+### 高级封装 Axios
+
+> 参考文献 https://juejin.cn/post/7143488626955911181
+
+<br>
+
+#### 请求思路
+
+1. 自定义 getData 方法，他通过 axios 实例进行 get 请求并返回一个 promise 实例
+2. useRequest 方法，用来处理 getData 等其余返回 promise 实例的方法，然后把 ref 绑定好的数据返回给调用者
+3. 自己注册好 axios 实例以及拦截器
+
+<br>
+
+#### .env
+
+环境变量配置文件，没什么可说的，直接在根目录（不是 src 文件夹）下添加文件 `.env`
+
+随便添加一条为后续 axios 实例构造时用到的 `BASE_URL`
+
+```
+VITE_BASE_URL='http://localhost:10086/'
+```
+
+<br>
+
+#### request.js
+
+src 文件夹下新建 api 文件夹，创建 request.js 作为封装 axios 代码所用
+
+首先创建一个 axios 实例，下面是几个经典的配置参数
+
+```js
+export const server = axios.create({
+  baseURL: import.meta.env.VITE_BASE_URL,
+  timeout: 300 * 1000,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+  },
+});
+```
+
+其次就是请求与响应拦截器，这里大家可以自定义
+
+```js
+// 请求拦截器
+server.interceptors.request.use(
+  (config) => {
+    // 如果请求方法为GET，则字符串化params
+    if (config.method === "get") {
+      config.paramsSerializer = (params) => {
+        return qs.stringify(params, {
+          arrayFormat: "comma",
+        });
+      };
+    }
+
+    // 获取用户token并附带在headers里传递给后端
+    const token = localStorage.token;
+    if (token) {
+      config.headers["token"] = token;
+    }
+    return config;
+  },
+  (err) => {
+    Promise.reject(err);
+  }
+);
+
+// 响应拦截器
+server.interceptors.response.use(
+  (config) => {
+    return config;
+  },
+  (err) => {
+    // 如果错误的响应体存在的话
+    if (err.response) {
+      // 获取响应值message
+      const msg =
+        err.response.data === null
+          ? "服务端出错，无法获取响应内容"
+          : err.response.data.message;
+
+      // 根据响应状态码来返回对应信息
+      switch (err.response.status) {
+        case STATUS.success.id:
+          ElMessage(STATUS.success.msg);
+          break;
+        default:
+          if (msg === "invalid token") {
+            ElMessage("登录状态过期，请重新登陆");
+          } else {
+            ElMessage(msg);
+          }
+          break;
+      }
+    }
+    return Promise.reject(err);
+  }
+);
+```
+
+<br>
+
+到了最关键的 `useRequest` 方法部分了
+
+这里的 `service` 形参接收一个返回 promise 实例的 API 方法，比如我们之后要定义的 `getData`
+
+这里使用异步请求并绑定 ref，可以使得数据在获取完毕后立刻触发响应式更新 UI
+
+options 形参用于标识是否开始以及深度参数（不重要，可以在调用的时候忽略）
+
+```js
+export const useRequest = (service, options) => {
+  const res = ref();
+  const run = async () => {
+    res.value = await service();
+  };
+  if (options.ready) {
+    run();
+  }
+  watch(options.deps, () => {
+    run();
+  });
+  return res;
+};
+```
+
 ### 项目实战
 
 #### 推荐封装结构

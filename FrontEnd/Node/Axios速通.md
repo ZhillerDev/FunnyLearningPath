@@ -416,6 +416,65 @@ export const useRequest = (service, options) => {
 };
 ```
 
+<br>
+
+#### api.js
+
+在 api 文件夹下直接新建 `api.js`
+
+分别为 GET 和 POST 请求定义对应的方法
+
+```js
+export function getData(url, params) {
+  return new Promise((resolve, reject) => {
+    server
+      .get(url, params)
+      .then((res) => {
+        resolve(res?.data?.data);
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+export function postData(url, formData) {
+  return new Promise((resolve, reject) => {
+    server
+      .post(url, formData)
+      .then((res) => {
+        resolve(res?.data?.data);
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+```
+
+<br>
+
+#### 调用
+
+因为 ref 可以接收一个 ref 数据，故我的做法是，现在外部定义一个 ref，并于 `onMounted` 钩子获取后端数据
+
+由于 `useRequest` 直接返回的就是一个 ref 属性，所以不用担心匹配问题
+
+```js
+let result = ref();
+
+onMounted(() => {
+  result = useRequest(() => getData("bk/admin/getnote"), {
+    ready: true,
+    deps: [],
+  });
+});
+```
+
+> 由于异步获取后端数据需要一段时间，故 ref 绑定可以在获取正确数据后立刻刷新 UI，很方便！
+
+<br>
+
 ### 项目实战
 
 #### 推荐封装结构

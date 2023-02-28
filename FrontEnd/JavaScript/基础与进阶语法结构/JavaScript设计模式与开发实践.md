@@ -56,3 +56,142 @@ console.log(Symbol.keyFor(sb3)); // undefined
 ```
 
 <br>
+
+#### 原型模式与对象系统
+
+最常见的原型继承方式如下：
+
+这是 `a.name` 执行时的完整过程
+
+1. 现在对象 a 中查找，发现没有 name 属性
+2. 再在 a 的构造器中找，即 `a.__proto__`，发现其连接着 `A.prototype`
+3. 而 `A.prototype` 又指向了对象 obj
+4. 此时直接从对象 obj 中获取 name 属性
+
+```js
+var obj = { name: "sven" };
+
+var A = function () {};
+A.prototype = obj;
+
+var a = new A();
+console.log(a.name); // 输出：sven
+```
+
+<br>
+
+类之间的继承可以以以下的方式模拟
+
+```js
+// 指定A的原型为一个对象，对象中包含属性name
+var A = function () {};
+A.prototype = { name: "sven" };
+
+// 将B的原型指定为新实例A
+var B = function () {};
+B.prototype = new A();
+
+// 构造实例B，然后取出name
+var b = new B();
+console.log(b.name); // 输出：sven
+```
+
+<br>
+
+### this\call\apply
+
+#### this
+
+一般的，为了简化根据 ID 获取 DOM 的代码，我们可以这样写
+
+```js
+// 方式一
+var getId = function (id) {
+  return document.getElementById(id);
+};
+
+getId("div1");
+```
+
+而不可以这样写
+
+```js
+// 方式二
+var getId = document.getElementById;
+getId("div1");
+```
+
+某些浏览器在执行 `document.getElementById` 时会用到 this，而方式二中属于普通函数调用，此时的 this 指向 `window` 而不是 `document` ，故报错！
+
+可以通过 `apply` 或者 `call` 修改 `this` 指向，从而使得方式二也可以被使用
+
+<br>
+
+#### call\apply
+
+call 和 apply 第一个参数可以为 null，此时的 this 指向即保持默认
+
+特殊情况下，第一个参数传入 null 是为了代替某些具体对象，比如下面的取最大值的方法
+
+```js
+let res = Math.max.apply(null, [1, 2, 3, 4, 5]);
+console.log(res); // 5
+```
+
+<br>
+
+call 修正 this 指向的小案例：
+
+```js
+// 修改this使其指向当前DOM，而不是window
+document.getElementById("div1").onclick = function () {
+  var func = function () {
+    alert(this.id); // 输出：div1
+  };
+  func.call(this);
+};
+```
+
+<br>
+
+对于某些不支持 `Function.prototype.bind` 的浏览器来说，我们可以简单手写模拟一个
+
+```js
+// 模拟Function.prototype.bind
+Function.prototype.bind = function (context) {
+  var self = this; // 保存原函数
+  return function () {
+    // 返回一个新的函数
+    return self.apply(context, arguments); // 执行新的函数的时候，会把之前传入的context
+    // 当作新函数体内的this
+  };
+};
+
+var obj = {
+  name: "sven",
+};
+var func = function () {
+  alert(this.name); // 输出：sven
+}.bind(obj);
+
+func();
+```
+
+<br>
+
+借用构造函数
+
+借用 `Array.prototype.push` 往 `arguments` 添加一个新的元素
+
+```js
+(function () {
+  Array.prototype.push.call(arguments, 3);
+  console.log(arguments); // 输出[1,2,3]
+})(1, 2);
+```
+
+<br>
+
+### 闭包与高阶函数
+
+#### 闭包

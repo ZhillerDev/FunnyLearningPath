@@ -420,9 +420,9 @@ export const useRequest = (service, options) => {
 
 #### api.js
 
-在 api 文件夹下直接新建 `api.js`
+在 api 文件夹下直接新建 `api.js`  
 
-分别为 GET 和 POST 请求定义对应的方法
+分别为 `GET` 和 `POST` 请求定义对应的方法  
 
 ```js
 export function getData(url, params) {

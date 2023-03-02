@@ -420,9 +420,9 @@ export const useRequest = (service, options) => {
 
 #### api.js
 
-在 api 文件夹下直接新建 `api.js`  
+在 api 文件夹下直接新建 `api.js`
 
-分别为 `GET` 和 `POST` 请求定义对应的方法  
+分别为 `GET` 和 `POST` 请求定义对应的方法
 
 ```js
 export function getData(url, params) {
@@ -812,6 +812,68 @@ const dbStore = defineStore(Names.DBSTORE, {
 });
 
 export default dbStore;
+```
+
+<br>
+
+### 踩坑
+
+#### axios 丢失响应式
+
+> 本案例采用 `axios+elementplus` 作为演示
+
+不知道各位有无遇到过这么一种状况，在 axios 请求中明明成功获取到了值，并且也把值赋予给了 reactive 属性，但是却发现页面并没有渲染出数据
+
+这是因为对于 vue3，如果在 axios 请求中直接以赋值的方式修改 reactive 属性，那么该 reactive 就会丢失响应式
+
+解决办法就是使用 push 插入数据
+
+```html
+<template>
+  <div>快速备忘录 ({{ datas.notes.length }}/50)</div>
+</template>
+
+<script setup>
+  import { onMounted, reactive, ref } from "vue";
+
+  // 需要使用let而不是const，因为其属性值动态修改
+  // 属性初始值最好和后端返回数据类型一致，比如后端返回数组，初始值就设定为 []
+  let datas = reactive({
+    notes: [],
+  });
+  onMounted(() => {
+    server
+      .get("/bk/admin/getnote")
+      .then((res) => {
+        // push插入数据
+        datas.notes.push(...res.data.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+</script>
+```
+
+<br>
+
+或者使用此方法
+
+```js
+let datas = reactive({
+  notes: [],
+});
+onMounted(() => {
+  server
+    .get("/bk/admin/getnote")
+    .then((res) => {
+      // 直接赋值
+      datas.notes = res.data.data;
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
 ```
 
 <br>

@@ -5,6 +5,9 @@
 - `Vue2` 响应式基于 `Object.defineProperty`
 - `Vue3` 响应式基于 `Proxy`
 
+`vue2` 组合式写法 data 中的所有属性无论深度几层均会被赋予响应式，包括某些从未用到的属性，造成极大地性能开销  
+`vue3` 改用 ref 和 reactive，具惰性，仅被使用到的属性才会赋予响应式
+
 <br>
 
 #### Vue2 实现

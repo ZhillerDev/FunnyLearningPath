@@ -287,4 +287,59 @@ alert(cost()); // 求值并输出：600
 
 <br>
 
-### 设计模式
+### 单例模式
+
+#### 透明的单例模式
+
+传统单例模式，需要你知道当前对象是单例的，且可以调用 getInstance 方法获取其实例
+
+可以使用代理的方式管理单例，而对象本身不处理代理相关逻辑
+
+```js
+var CreateDiv = function (html) {
+  this.html = html;
+  this.init();
+};
+
+CreateDiv.prototype.init = function () {
+  var div = document.createElement("div");
+  div.innerHTML = this.html;
+  document.body.appendChild(div);
+};
+
+// 使用代理创建以及识别单例
+var ProxySingletonCreateDiv = (function () {
+  var instance;
+  return function (html) {
+    if (!instance) {
+      instance = new CreateDiv(html);
+    }
+
+    return instance;
+  };
+})();
+
+var a = new ProxySingletonCreateDiv("sven1");
+var b = new ProxySingletonCreateDiv("sven2");
+
+alert(a === b); // true
+```
+
+<br>
+
+#### 惰性单例
+
+将获取单例的方法单独抽离出来，通过此方法获取对象的单例
+
+```js
+var getSingle = function (fn) {
+  var result;
+  return function () {
+    return result || (result = fn.apply(this, arguments));
+  };
+};
+```
+
+<br>
+
+### 策略模式

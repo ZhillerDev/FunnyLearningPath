@@ -343,3 +343,36 @@ var getSingle = function (fn) {
 <br>
 
 ### 策略模式
+
+> 策略模式的目的就是将算法的使用与算法的实现分离开来
+
+#### 策略模式发展
+
+假设有这么一个场景：需要通过员工名字及其薪水计算奖金
+
+经典方法需要每次接收对应的两个参数，方法内需要大量的 ifelse 做逻辑覆盖，并且缺乏弹性违背开闭原则；
+
+<br>
+
+#### 策略模式实现
+
+```js
+var strategies = {
+  S: function (salary) {
+    return salary * 4;
+  },
+  A: function (salary) {
+    return salary * 3;
+  },
+  B: function (salary) {
+    return salary * 2;
+  },
+};
+
+var calculateBonus = function (level, salary) {
+  return strategies[level](salary);
+};
+
+console.log(calculateBonus("S", 20000)); // 输出：80000
+console.log(calculateBonus("A", 10000)); // 输出：30000
+```

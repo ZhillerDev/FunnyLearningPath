@@ -194,6 +194,97 @@ func();
 
 ### 闭包与高阶函数
 
-#### 闭包
+Array.prototype.sort 接受一个函数当作参数，用户可以自行在该函数内指定排序方式
 
+```js
+// 由小到大排序
+let res = [1, 4, 2].sort((a, b) => {
+  return a - b;
+});
+console.log(res);
+```
 
+<br>
+
+#### Function 扩展函数
+
+通过对 Function 原型执行扩展，可以达到类似装饰器的效果，这也是 AOP 风格的体现
+
+```js
+Function.prototype.before = function (beforefn) {
+  var __self = this; // 保存原函数的引用
+  return function () {
+    // 返回包含了原函数和新函数的"代理"函数
+    beforefn.apply(this, arguments); // 执行新函数，修正this
+    return __self.apply(this, arguments); // 执行原函数
+  };
+};
+
+Function.prototype.after = function (afterfn) {
+  var __self = this;
+  return function () {
+    var ret = __self.apply(this, arguments);
+    afterfn.apply(this, arguments);
+    return ret;
+  };
+};
+
+var func = function () {
+  console.log(2);
+};
+
+func = func
+  .before(function () {
+    console.log(1);
+  })
+  .after(function () {
+    console.log(3);
+  });
+
+func(); // 1,2,3
+```
+
+<br>
+
+#### 柯里化函数
+
+currying 又称部分求值。一个 currying 的函数首先会接受一些参数，接受了这些参数之后，该函数并不会立即求值，而是继续返回另外一个函数，刚才传入的参数在函数形成的闭包中被保存起来。待到函数被真正需要求值的时候，之前传入的所有参数都会被一次性用于求值
+
+```js
+var currying = function (fn) {
+  var args = [];
+
+  // 当调用柯里函数时不带任何参数，直接执行所有栈中函数
+  // 当调用柯里函数时带入了参数，就会向args压入一个新的带参函数
+  return function () {
+    if (arguments.length === 0) {
+      return fn.apply(this, args);
+    } else {
+      [].push.apply(args, arguments);
+      return arguments.callee;
+    }
+  };
+};
+
+// 将cost写成一个IIFE函数，之后其将转变为柯里函数
+var cost = (function () {
+  var money = 0;
+  return function () {
+    for (var i = 0, l = arguments.length; i < l; i++) {
+      money += arguments[i];
+    }
+    return money;
+  };
+})();
+
+var cost = currying(cost); // 转化成currying函数
+
+cost(100); // 未真正求值
+cost(200); // 未真正求值
+cost(300); // 未真正求值
+alert(cost()); // 求值并输出：600
+```
+
+<br>
+
+### 设计模式

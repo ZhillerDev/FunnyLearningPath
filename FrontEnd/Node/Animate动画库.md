@@ -89,7 +89,9 @@ onMounted(() => {
     animateClass: "animate__animated",
     // 偏移值（即偏移一定距离后再执行动画，推荐设置！）
     offset: 100,
+    // 移动设备是否生效
     mobile: true,
+    // 是否支持异步
     live: true,
   });
   wow.init();

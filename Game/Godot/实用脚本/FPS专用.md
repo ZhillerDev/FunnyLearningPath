@@ -83,3 +83,5 @@ func _physics_process(delta):
 	move_and_slide()
 
 ```
+
+### 摄像机锁定目标环绕

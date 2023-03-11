@@ -1,6 +1,6 @@
 ### 基础补间
 
-> 本补间动画在 2d 层面执行
+> 本补间动画在 2d 层面执行，使用 godot4 版本
 
 新建一个 sprite2d 作为我们的基础角色，创建过程不再赘述
 
@@ -60,5 +60,24 @@ func _input(event):
 		tween.tween_property(self,"position",event.position,1)
 		tween.parallel().tween_property(self,"rotation_degrees",self.rotation_degrees+180,1)
 ```
+
+<br>
+
+### 后缀属性
+
+`set_delay()` 让动画延迟 x 秒后执行  
+`tween.tween_property(self,"rotation_degrees",180,1).set_delay(1)`
+
+`from_current()` 从当前状态执行到目标状态  
+`tween.tween_property(self,"rotation_degrees",180,1).from_current()`
+
+`from()` 从指定状态执行到目标状态  
+`tween.tween_property(self,"rotation_degrees",180,1).from(90)`
+
+<br>
+
+`set_ease` 设置线性动画过渡曲线
+
+`set_trans` 同样是设置过渡曲线，但是附带一定物理特效
 
 <br>

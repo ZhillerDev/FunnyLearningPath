@@ -376,3 +376,5 @@ var calculateBonus = function (level, salary) {
 console.log(calculateBonus("S", 20000)); // 输出：80000
 console.log(calculateBonus("A", 10000)); // 输出：30000
 ```
+
+<br>

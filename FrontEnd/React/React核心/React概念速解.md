@@ -514,4 +514,6 @@ export default function App() {
 }
 ```
 
+> React.lazy 懒加载的模块必须使用 export default，它不支持具名导出模式
+
 <br>

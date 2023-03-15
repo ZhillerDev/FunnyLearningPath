@@ -163,7 +163,10 @@ function ActionLink() {
   }
 
   return (
-    <a href="#" onClick={handleClick}>
+    <a
+      href="#"
+      onClick={handleClick}
+    >
       Click me
     </a>
   );
@@ -302,7 +305,10 @@ function NumberList(props) {
   return (
     <ul>
       {numbers.map((number) => (
-        <ListItem key={number.toString()} value={number} />
+        <ListItem
+          key={number.toString()}
+          value={number}
+        />
       ))}
     </ul>
   );
@@ -354,7 +360,10 @@ class NameForm extends React.Component {
             onChange={this.handleChange}
           />
         </label>
-        <input type="submit" value="提交" />
+        <input
+          type="submit"
+          value="提交"
+        />
       </form>
     );
   }
@@ -366,7 +375,10 @@ class NameForm extends React.Component {
 对于文本域 `textarea` ，我们不再向其内部写标签，直接使用 `value` 作为该文本域的内容
 
 ```js
-<textarea value={this.state.value} onChange={this.handleChange} />
+<textarea
+  value={this.state.value}
+  onChange={this.handleChange}
+/>
 ```
 
 <br>
@@ -374,7 +386,10 @@ class NameForm extends React.Component {
 select 组件里面的 value 直接指代当前激活的是哪一个 option，他的值等于当前几乎跌 option 的 value 值
 
 ```js
-<select value={this.state.value} onChange={this.handleChange}>
+<select
+  value={this.state.value}
+  onChange={this.handleChange}
+>
   <option value="grapefruit">葡萄柚</option>
   <option value="lime">酸橙</option>
   <option value="coconut">椰子</option>
@@ -485,7 +500,12 @@ import PropsTest from "../components/PropsTest";
 
 export default function App() {
   // 简单的为两个插槽添加了各自的div标签
-  return <PropsTest slot1={<div>123</div>} slot2={<div>456</div>} />;
+  return (
+    <PropsTest
+      slot1={<div>123</div>}
+      slot2={<div>456</div>}
+    />
+  );
 }
 ```
 
@@ -556,3 +576,83 @@ function Demo2() {
   return <div>{ctx}</div>;
 }
 ```
+
+该代码最终实现的结果是：定义一个默认值为 damn 的 context，使用 provider 定义 context 的新值为 what 并透传给下属所有的 DOM；后续任意层次的组件内部仅需使用 useContext 钩子即可获取对应 context 存储的内容
+
+<br>
+
+`Consumer` 用于快速获取 context，下方代码的 value 代表获取到的值，以箭头函数的形式使用该值
+
+此处 `context` 值为最近一个 provider 所定义的值，如果整个 DOM 树都没有 provider，那么直接使用顶层定义的默认 context 值
+
+```jsx
+function Demo2() {
+  return (
+    <MyContext.Consumer>{(value) => <div>{value}</div>}</MyContext.Consumer>
+  );
+}
+```
+
+<br>
+
+**动态 context**
+
+动态 context 是为了协助我们在深层次嵌套的组件内部更新 context 数据
+
+首先定义顶层 context，该 context 包含一个属性以及修改属性的方法  
+代码清单：`default-context.js`
+
+```js
+import React from "react";
+
+export const DemoContext = React.createContext({
+  count: 0,
+  toggleCount: () => {},
+});
+```
+
+之后就是主代码，主要实现功能为点击按钮给数值+1
+
+由于我们的 `DemoContext` 存储了一个包含两个属性的对象，故在使用该 context 时必须要对其进行解构，确保两个属性都用上！！！
+
+```jsx
+import React, { useState } from "react";
+import { DemoContext } from "../constant/default-context";
+
+// 被调用的组件
+function ToggleTest() {
+  return (
+    // 解构DemoContext，分为count和toggleCount
+    <DemoContext.Consumer>
+      {({ count, toggleCount }) => (
+        <>
+          <div>{count}</div>
+          <button onClick={toggleCount}>点我加一</button>
+        </>
+      )}
+    </DemoContext.Consumer>
+  );
+}
+
+// 主组件
+export default function DeepContext() {
+  // 简单定义一个state
+  const [count, setCount] = useState(0);
+  return (
+    // 因为定义的context是对象，故依葫芦画瓢这里也必须以对象的形式传入value
+    // setCount必须以函数的形式执行，否则react编译报错
+    <DemoContext.Provider
+      value={{
+        count: count,
+        toggleCount: () => setCount(count + 1),
+      }}
+    >
+      <ToggleTest />
+    </DemoContext.Provider>
+  );
+}
+```
+
+<br>
+
+#### 错误边界

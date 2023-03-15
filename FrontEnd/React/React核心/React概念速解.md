@@ -418,4 +418,36 @@ handleInputChange(event) {
 
 ### 高级部分
 
-####
+#### 组合与继承
+
+> 这部分概念和 Vue 的插槽很像，大家可以类比学习一下
+
+我们首先准备一个函数组件 PropTest.jsx
+
+`props.children` 可以看做是存放所有父组件传递过来的 DOM 的插槽，在我们没有提供具名插槽（vue 的叫法，不是 react 官方术语）时，父组件传递过来的所有 DOM 都会在这里渲染
+
+```jsx
+import React from "react";
+
+export default function PropsTest(props) {
+  // style样式设置为父组件传递过来的参数color
+  return <div style={{ color: props.color }}>{props.children}</div>;
+}
+```
+
+很好，现在我们于父组件调用子组件，同时传递了两个标签  
+这两个标签都会在 `props.children` 的位置渲染
+
+```jsx
+import PropsTest from "../components/PropsTest";
+
+export default function App() {
+  return (
+    // 我们为子组件的插槽传递了两个DOM，他们均会被渲染
+    <PropsTest color="blue">
+      <p>this is a place</p>
+      <div>another</div>
+    </PropsTest>
+  );
+}
+```

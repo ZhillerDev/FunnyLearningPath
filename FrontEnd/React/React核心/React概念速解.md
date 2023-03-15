@@ -514,6 +514,45 @@ export default function App() {
 }
 ```
 
-> React.lazy 懒加载的模块必须使用 export default，它不支持具名导出模式
+> React.lazy 懒加载的模块必须使用 `export default`，它不支持具名导出模式
 
 <br>
+
+#### Context
+
+> `context` 作用是解决组件透传时需要频繁书写 props 的冗余，仅需一次声明 context，即可透传任意深度的 DOM 树
+
+定义一个 context 的步骤如下：
+
+1. `React.createContext` 在组件顶层创建一个新的 context，他接受一个参数表示上下文的默认值
+2. `<MyContext.Provider value="what">` 固定格式，表示透传参数，value 属性指定透传给后续 DOM 的上下文的值
+3. `useContext(MyContext)` 最新的 hook，获取 context，接收的一个参数为我们顶层定义的 `context`
+4. 直接使用 context
+
+```jsx
+import React, { useContext } from "react";
+
+// 定义一个context
+const MyContext = React.createContext("damn");
+
+// 起始组件
+export default function ContextTest() {
+  return (
+    // Provider透传context
+    <MyContext.Provider value="what">
+      <Demo1 />
+    </MyContext.Provider>
+  );
+}
+
+// 中间组件
+function Demo1() {
+  return <Demo2 />;
+}
+// 末端组件
+function Demo2() {
+  // useContext获取指定上下文
+  const ctx = useContext(MyContext);
+  return <div>{ctx}</div>;
+}
+```

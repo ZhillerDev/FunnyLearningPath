@@ -416,13 +416,19 @@ handleInputChange(event) {
 
 <br>
 
+#### React 哲学？
+
+我不需要哲学，代码能跑就行
+
+<br>
+
 ### 高级部分
 
 #### 组合与继承
 
 > 这部分概念和 Vue 的插槽很像，大家可以类比学习一下
 
-我们首先准备一个函数组件 PropTest.jsx
+我们首先准备一个函数组件 `PropTest.jsx`
 
 `props.children` 可以看做是存放所有父组件传递过来的 DOM 的插槽，在我们没有提供具名插槽（vue 的叫法，不是 react 官方术语）时，父组件传递过来的所有 DOM 都会在这里渲染
 
@@ -451,3 +457,61 @@ export default function App() {
   );
 }
 ```
+
+<br>
+
+> 就像我们前面说过的，可以使用具名插槽
+
+稍微改动一下 `PropsTest.jsx`  
+我们提供了两个具名插槽，slot1、slot2
+
+```jsx
+import React from "react";
+
+export default function PropsTest(props) {
+  return (
+    <div>
+      {props.slot1}
+      {props.slot2}
+    </div>
+  );
+}
+```
+
+注意，此时在父组件内，插槽是作为属性写在子组件标签内部的！
+
+```jsx
+import PropsTest from "../components/PropsTest";
+
+export default function App() {
+  // 简单的为两个插槽添加了各自的div标签
+  return <PropsTest slot1={<div>123</div>} slot2={<div>456</div>} />;
+}
+```
+
+<br>
+
+#### 代码分割
+
+React.lazy 实现动态懒加载组件，他接受一个函数，该函数 import 对应的组件
+
+欲懒加载的组件在调用时必须使用 `Suspense` 标签包裹  
+且 `Suspense` 标签内部可以嵌套任意多层非懒加载组件标签，但必须要保证懒加载组件标签在 Suspense 标签的内部
+
+`Suspense` 的 `fallback` 属性提供元素加载过程时需要显示的内容
+
+```jsx
+import React, { Suspense } from "react";
+
+const LazyTest = React.lazy(() => import("../components/LazyTest"));
+
+export default function App() {
+  return (
+    <Suspense fallback={<div>loading...</div>}>
+      <LazyTest />
+    </Suspense>
+  );
+}
+```
+
+<br>

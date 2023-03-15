@@ -165,6 +165,149 @@ useEffect(() => {
 
 <br>
 
-### useContext
+### useReducer
+
+#### 快速上手
+
+useReducer 可视为 useState 的一个扩展 hook，他协助我们进行精细化的数值控制，特别适于处理复杂逻辑
+
+首先定义一个初始值，作为一个 state 传递给 reducer
+
+```js
+const initState = { count: 0 };
+```
+
+第二步，编写 reducer 函数  
+`state` 即为传递过来的数值
+`action` 为后续我们用到的 dispatch 传递过来的参数
+
+```js
+function reducer(state, action) {
+  switch (action.type) {
+    case "inc":
+      return { count: state.count + 1 };
+    case "dec":
+      return { count: state.count - 1 };
+    default:
+      throw new Error();
+  }
+}
+```
+
+第三步，调用 useReducer
+
+```jsx
+export default function ReducerTest() {
+  const [state, dispatch] = useReducer(reducer, initState);
+  return (
+    <>
+      <div>count: {state.count}</div>
+      <button onClick={() => dispatch({ type: "inc" })}>+1</button>
+      <button onClick={() => dispatch({ type: "dec" })}>-1</button>
+    </>
+  );
+}
+```
+
+整体逻辑：
+
+- `useReducer` 接收两个参数，参数一为处理数值的 reducer，参数二为欲检测的数值
+- `useReducer` 返回两个值，一个为状态 `state` ，一个为 `dispatch`（对应 reducer 函数中的 action 参数）
+
+<br>
+
+> 由于文字难以表达对应函数的作用，请上手自行测试多写，大体即可了解该 hook 的用法！
+
+jsx 模板文件完整代码如下：
+
+```jsx
+import React, { useReducer } from "react";
+
+const initState = { count: 0 };
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "inc":
+      return { count: state.count + 1 };
+    case "dec":
+      return { count: state.count - 1 };
+    default:
+      throw new Error();
+  }
+}
+
+export default function ReducerTest() {
+  const [state, dispatch] = useReducer(reducer, initState);
+  return (
+    <>
+      <div>count: {state.count}</div>
+      <button onClick={() => dispatch({ type: "inc" })}>+1</button>
+      <button onClick={() => dispatch({ type: "dec" })}>-1</button>
+    </>
+  );
+}
+```
+
+<br>
 
 ## 自定义 Hook
+
+### 规定
+
+自定义 hook 必须以 `use` 开头
+
+不同 hook 之间的 state 完全隔离
+
+<br>
+
+### 简单测试
+
+自定义 hook 实际上就是我们编写的一个函数，该函数内包含任意内容，可以存在 useState 或者 useEffect 等
+
+创建一个 js 文件 `CustomHook.js` 在里面写下第一个自定义 Hook  
+该 hook 的逻辑很简单，检测传入的 id，如果大于 10 那么就返回值为 true 的 demo
+
+```js
+import { useState, useEffect } from "react";
+
+function useCustomHook(id) {
+  let [demo, setDemo] = useState(false);
+  useEffect(() => {
+    if (id > 10) setDemo((demo = true));
+  });
+  return demo;
+}
+
+export default {
+  useCustomHook,
+};
+```
+
+<br>
+
+在 jsx 模板内调用该 hook  
+简单实现了功能：点击按钮为 count+1，数值为 10 时通过自定义 hook 中的 effect 函数设置 isDemo 为 true，此时动态渲染 div
+
+```jsx
+import React, { useEffect, useState } from "react";
+import CustomHook from "../hook/CustomHook";
+
+export default function EffectTest() {
+  const [count, setCount] = useState(0);
+
+  // 直接调用自定义hook
+  const isDemo = CustomHook.useCustomHook(count);
+
+  // 因为自定义hook中存在一个useEffect，可以检测副作用，所以每次count的更新都会触发effect函数
+  // 故isDemo都是动态变化的，与此同时带动下方的动态渲染
+  return (
+    <div>
+      <p>点击按钮增加数值 {count}</p>
+      <button onClick={() => setCount(count + 1)}>加一</button>
+      <div>{isDemo ? "测试为真" : ""}</div>
+    </div>
+  );
+}
+```
+
+<br>

@@ -655,4 +655,79 @@ export default function DeepContext() {
 
 <br>
 
-#### 错误边界
+#### Fragments
+
+`Fragments` 可以视为 vue 中的 template 标签，它提供一个空的，无实际意义的标签作为根标签包裹其余标签
+
+`Fragments` 可以使用短语法实现：`<></>`
+
+下面是一个渲染 ul 的方法
+
+```jsx
+import React from "react";
+
+export default function FragmentsTest() {
+  return (
+    <ul>
+      <FragmentsFragment name="tom" />
+      <FragmentsFragment name="jack" />
+      <FragmentsFragment name="har" />
+      <FragmentsFragment name="asd" />
+    </ul>
+  );
+}
+
+function FragmentsFragment(props) {
+  return (
+    <>
+      <li>{props.name}</li>
+    </>
+  );
+}
+```
+
+<br>
+
+#### 高阶组件 HOC
+
+所谓高阶组件，即接收一个参数为组件，返回值为新组件
+
+下面的案例展示了使用高阶组件配合 props 传参
+
+```jsx
+import React from "react";
+
+// 高阶组件HOC
+function withDescription(Comp) {
+  return class extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = { flag: "asd" };
+    }
+    render() {
+      return <Comp data={this.state.flag} />;
+    }
+  };
+}
+
+// 欲被实例化的组件
+function InnerComp(props) {
+  return <div>{props.data}</div>;
+}
+
+// 调用高阶组件
+export default function HOCTest() {
+  const Desp = withDescription(InnerComp);
+  return <Desp />;
+}
+```
+
+<br>
+
+#### 第三方库协调
+
+> 目前用不到，不更新
+
+<br>
+
+#### 深入理解 JSX

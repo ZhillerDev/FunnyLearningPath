@@ -731,3 +731,95 @@ export default function HOCTest() {
 <br>
 
 #### 深入理解 JSX
+
+react 组件必须以大写字母作为开头，否则将会被识别为普通 HTML 标签
+
+花括号内的语句会被解析，所以以下两个写法是等价的
+
+```jsx
+<MyComponent message="&lt;3" />
+<MyComponent message={'<3'} />
+```
+
+<br>
+
+如果你想渲染 `false、true、null、undefined` 等值，你需要先将它们转换为字符串
+
+```jsx
+<div>My JavaScript variable is {String(myVariable)}.</div>
+```
+
+<br>
+
+#### Portals
+
+> 技术不足，无法解析
+
+<br>
+
+#### Refs to DOM
+
+这是官方给出的，通过获取 refs 指定的 DOM，然后触发 input 获取焦点
+
+```jsx
+import React from "react";
+
+export class CustomTextInput extends React.Component {
+  constructor(props) {
+    super(props);
+    // 创建一个 ref 来存储 textInput 的 DOM 元素
+    this.textInput = React.createRef();
+    this.focusTextInput = this.focusTextInput.bind(this);
+  }
+
+  focusTextInput() {
+    // 直接使用原生 API 使 text 输入框获得焦点
+    // 注意：我们通过 "current" 来访问 DOM 节点
+    this.textInput.current.focus();
+  }
+
+  render() {
+    // 告诉 React 我们想把 <input> ref 关联到
+    // 构造器里创建的 `textInput` 上
+    return (
+      <div>
+        <input
+          type="text"
+          ref={this.textInput}
+        />
+        <input
+          type="button"
+          value="Focus the text input"
+          onClick={this.focusTextInput}
+        />
+      </div>
+    );
+  }
+}
+```
+
+<br>
+
+请注意，在函数式组件内无法直接使用 ref，因为没有 DOM；  
+但是可以使用 `useRef` 或者 `forwardRef` 替代之
+
+下面即通过 `useRef` 钩子获取到 DOM，然后执行内容修改的一个简单函数式组件
+
+```jsx
+export default function RefsDom() {
+  // 获取DOM时需要预先指定好Ref对象
+  const textRef = useRef(null);
+  function changeText() {
+    // 获取DOM并改变内容
+    textRef.current.innerHTML = "asd";
+  }
+  return (
+    <React.Fragment>
+      <div ref={textRef}>normal</div>
+      <button onClick={changeText}>改变数据</button>
+    </React.Fragment>
+  );
+}
+```
+
+<br>

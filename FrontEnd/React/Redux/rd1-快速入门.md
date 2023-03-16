@@ -119,15 +119,23 @@ export const store = configureStore({
 
 很好，设置完总容器并妥善注册子容器后，接下来就是比较复杂的使用部分了
 
+部分功能介绍
+
+- `useSelector` ，类似于 useContext，可以获取从父组件透传下来的 store
+- `useDispatch` ，用于调用子容器内的 actions
+
 ```jsx
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { increment, decrement, reset, incrementByAmount } from "./counterSlice";
 
 const Counter = () => {
+	// 获取透传下来的store
 	const count = useSelector((state) => state.counter.count);
+	// 用于调用actions
 	const dispatch = useDispatch();
 
+	// 记录当前数值，以及对应的清除方法
 	const [increAmount, setIncreAmount] = useState(0);
 	const addValue = Number(increAmount) || 0;
 	const resetAll = () => {
@@ -163,7 +171,7 @@ export default Counter;
 
 #### 收尾
 
-这一部分就没什么事可做了，只需要在 app.jsx 里面调用刚刚写好的组件即可
+这一部分就没什么事可做了，只需要在 `app.jsx` 里面调用刚刚写好的组件即可
 
 ```jsx
 import React, { Suspense } from "react";
@@ -178,7 +186,9 @@ export default function App() {
 }
 ```
 
-之后来带 main.jsx，这里还有一些点需要大家注意
+之后来带 `main.jsx`，这里还有一些点需要大家注意
+
+这里需要使用 `Provider` 将 store 透传到所有的组件内部
 
 ```jsx
 import React from "react";

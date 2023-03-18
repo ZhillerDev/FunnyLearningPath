@@ -17,3 +17,20 @@ preinit.DB.Exec("ALTER TABLE `user` MODIFY COLUMN `id` int NOT NULL AUTO_INCREME
 ```
 
 <br>
+
+### 数据类型释疑
+
+#### map\[string\]interface{}
+
+取出其中的值，可以使用：`xxx['key']` 通过 key 取出  
+取出值为 interface{}类型的
+
+<br>
+
+#### interface{}类型转 string 类型
+
+使用函数 `Sprintf` 进行转换
+
+```go
+fmt.Sprintf("%v",openid)
+```

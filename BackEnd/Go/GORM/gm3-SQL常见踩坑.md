@@ -23,7 +23,7 @@ preinit.DB.Exec("ALTER TABLE `user` MODIFY COLUMN `id` int NOT NULL AUTO_INCREME
 #### map\[string\]interface{}
 
 取出其中的值，可以使用：`xxx['key']` 通过 key 取出  
-取出值为 interface{}类型的
+取出值为 `interface{}` 类型的
 
 <br>
 

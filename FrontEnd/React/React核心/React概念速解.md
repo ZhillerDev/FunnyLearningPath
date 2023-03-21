@@ -23,7 +23,7 @@ const element = <div tabIndex="0"></div>;
 
 // user这个形参可以直接传入JSX
 function getGreeting(user) {
-  return <h1>Hello, Stranger.</h1>;
+	return <h1>Hello, Stranger.</h1>;
 }
 ```
 
@@ -37,9 +37,9 @@ const element = <h1 className="greeting">Hello, world!</h1>;
 
 // 方法二
 const element = React.createElement(
-  "h1",
-  { className: "greeting" },
-  "Hello, world!"
+	"h1",
+	{ className: "greeting" },
+	"Hello, world!"
 );
 ```
 
@@ -56,7 +56,7 @@ react 的组件定义最方便的方法是：直接用函数，接受一个形�
 ```js
 // 顶一个组件，props为参数
 function Welcome(props) {
-  return <h1>Hello, {props.name}</h1>;
+	return <h1>Hello, {props.name}</h1>;
 }
 
 // 针对自定义组件，所有的属性都统一作为参数传递给props
@@ -78,14 +78,14 @@ ReactDOM.render(element, document.getElementById("root"));
 
 ```js
 class Clock extends React.Component {
-  render() {
-    return (
-      <div>
-        <h1>Hello, world!</h1>
-        <h2>It is {this.props.date.toLocaleTimeString()}.</h2>
-      </div>
-    );
-  }
+	render() {
+		return (
+			<div>
+				<h1>Hello, world!</h1>
+				<h2>It is {this.props.date.toLocaleTimeString()}.</h2>
+			</div>
+		);
+	}
 }
 ```
 
@@ -100,39 +100,39 @@ class Clock extends React.Component {
 
 ```js
 class Clock extends React.Component {
-  // 组件的构造函数
-  constructor(props) {
-    super(props);
-    // state是内部值，直接向里面丢东西
-    this.state = { date: new Date() };
-  }
+	// 组件的构造函数
+	constructor(props) {
+		super(props);
+		// state是内部值，直接向里面丢东西
+		this.state = { date: new Date() };
+	}
 
-  // 挂载完毕，开启间隔计时器，每1s执行一次方法tick()
-  componentDidMount() {
-    this.timerID = setInterval(() => this.tick(), 1000);
-  }
+	// 挂载完毕，开启间隔计时器，每1s执行一次方法tick()
+	componentDidMount() {
+		this.timerID = setInterval(() => this.tick(), 1000);
+	}
 
-  // 卸载前清除计时器
-  componentWillUnmount() {
-    clearInterval(this.timerID);
-  }
+	// 卸载前清除计时器
+	componentWillUnmount() {
+		clearInterval(this.timerID);
+	}
 
-  // 间隔更新函数，setState（差不多和微信小程序一个意思）修改值
-  tick() {
-    this.setState({
-      date: new Date(),
-    });
-  }
+	// 间隔更新函数，setState（差不多和微信小程序一个意思）修改值
+	tick() {
+		this.setState({
+			date: new Date(),
+		});
+	}
 
-  // render里面渲染DOM
-  render() {
-    return (
-      <div>
-        <h1>Hello, world!</h1>
-        <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
-      </div>
-    );
-  }
+	// render里面渲染DOM
+	render() {
+		return (
+			<div>
+				<h1>Hello, world!</h1>
+				<h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+			</div>
+		);
+	}
 }
 
 // 渲染，没啥好说的
@@ -156,20 +156,20 @@ state 注意事项
 
 ```js
 function ActionLink() {
-  function handleClick(e) {
-    // 阻止组件的默认行为
-    e.preventDefault();
-    console.log("The link was clicked.");
-  }
+	function handleClick(e) {
+		// 阻止组件的默认行为
+		e.preventDefault();
+		console.log("The link was clicked.");
+	}
 
-  return (
-    <a
-      href="#"
-      onClick={handleClick}
-    >
-      Click me
-    </a>
-  );
+	return (
+		<a
+			href="#"
+			onClick={handleClick}
+		>
+			Click me
+		</a>
+	);
 }
 ```
 
@@ -222,15 +222,15 @@ react 基本条件运算，根据之前我们所学知识，花括号内可以�
 
 ```js
 function Mailbox(props) {
-  const unreadMessages = props.unreadMessages;
-  return (
-    <div>
-      <h1>Hello!</h1>
-      {unreadMessages.length > 0 && (
-        <h2>You have {unreadMessages.length} unread messages.</h2>
-      )}
-    </div>
-  );
+	const unreadMessages = props.unreadMessages;
+	return (
+		<div>
+			<h1>Hello!</h1>
+			{unreadMessages.length > 0 && (
+				<h2>You have {unreadMessages.length} unread messages.</h2>
+			)}
+		</div>
+	);
 }
 ```
 
@@ -264,20 +264,20 @@ react 的列表渲染比较朴实一点，直接调用元素 map 迭代渲染
 
 ```js
 function NumberList(props) {
-  const numbers = props.numbers;
+	const numbers = props.numbers;
 
-  // 使用map取出numbers内部的所有值，渲染到指定JSX
-  const listItems = numbers.map((number) => (
-    // 万不得已的情况下可以直接拿值作为key
-    <li key={number.toString()}>{number}</li>
-  ));
-  return <ul>{listItems}</ul>;
+	// 使用map取出numbers内部的所有值，渲染到指定JSX
+	const listItems = numbers.map((number) => (
+		// 万不得已的情况下可以直接拿值作为key
+		<li key={number.toString()}>{number}</li>
+	));
+	return <ul>{listItems}</ul>;
 }
 
 const numbers = [1, 2, 3, 4, 5];
 ReactDOM.render(
-  <NumberList numbers={numbers} />,
-  document.getElementById("root")
+	<NumberList numbers={numbers} />,
+	document.getElementById("root")
 );
 ```
 
@@ -301,17 +301,17 @@ const todoItems = todos.map((todo, index) => <li key={index}>{todo.text}</li>);
 
 ```js
 function NumberList(props) {
-  const numbers = props.numbers;
-  return (
-    <ul>
-      {numbers.map((number) => (
-        <ListItem
-          key={number.toString()}
-          value={number}
-        />
-      ))}
-    </ul>
-  );
+	const numbers = props.numbers;
+	return (
+		<ul>
+			{numbers.map((number) => (
+				<ListItem
+					key={number.toString()}
+					value={number}
+				/>
+			))}
+		</ul>
+	);
 }
 ```
 
@@ -328,45 +328,45 @@ react 中的表单采用将所有数值都统一由 state 进行管理
 
 ```js
 class NameForm extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { value: "" };
+	constructor(props) {
+		super(props);
+		this.state = { value: "" };
 
-    // 没有小括号的函数调用必须要明确指定this指向
-    // 这里没有使用箭头函数的方法，而是使用bind绑定
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
+		// 没有小括号的函数调用必须要明确指定this指向
+		// 这里没有使用箭头函数的方法，而是使用bind绑定
+		this.handleChange = this.handleChange.bind(this);
+		this.handleSubmit = this.handleSubmit.bind(this);
+	}
 
-  handleChange(event) {
-    this.setState({ value: event.target.value });
-  }
+	handleChange(event) {
+		this.setState({ value: event.target.value });
+	}
 
-  // 表单提交操作
-  handleSubmit(event) {
-    alert("提交的名字: " + this.state.value);
-    // 阻止默认的表单post或者get操作，由该方法进行自定义指定
-    event.preventDefault();
-  }
+	// 表单提交操作
+	handleSubmit(event) {
+		alert("提交的名字: " + this.state.value);
+		// 阻止默认的表单post或者get操作，由该方法进行自定义指定
+		event.preventDefault();
+	}
 
-  render() {
-    return (
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          名字:
-          <input
-            type="text"
-            value={this.state.value}
-            onChange={this.handleChange}
-          />
-        </label>
-        <input
-          type="submit"
-          value="提交"
-        />
-      </form>
-    );
-  }
+	render() {
+		return (
+			<form onSubmit={this.handleSubmit}>
+				<label>
+					名字:
+					<input
+						type="text"
+						value={this.state.value}
+						onChange={this.handleChange}
+					/>
+				</label>
+				<input
+					type="submit"
+					value="提交"
+				/>
+			</form>
+		);
+	}
 }
 ```
 
@@ -376,8 +376,8 @@ class NameForm extends React.Component {
 
 ```js
 <textarea
-  value={this.state.value}
-  onChange={this.handleChange}
+	value={this.state.value}
+	onChange={this.handleChange}
 />
 ```
 
@@ -387,13 +387,13 @@ select 组件里面的 value 直接指代当前激活的是哪一个 option，�
 
 ```js
 <select
-  value={this.state.value}
-  onChange={this.handleChange}
+	value={this.state.value}
+	onChange={this.handleChange}
 >
-  <option value="grapefruit">葡萄柚</option>
-  <option value="lime">酸橙</option>
-  <option value="coconut">椰子</option>
-  <option value="mango">芒果</option>
+	<option value="grapefruit">葡萄柚</option>
+	<option value="lime">酸橙</option>
+	<option value="coconut">椰子</option>
+	<option value="mango">芒果</option>
 </select>
 ```
 
@@ -451,8 +451,8 @@ handleInputChange(event) {
 import React from "react";
 
 export default function PropsTest(props) {
-  // style样式设置为父组件传递过来的参数color
-  return <div style={{ color: props.color }}>{props.children}</div>;
+	// style样式设置为父组件传递过来的参数color
+	return <div style={{ color: props.color }}>{props.children}</div>;
 }
 ```
 
@@ -463,13 +463,13 @@ export default function PropsTest(props) {
 import PropsTest from "../components/PropsTest";
 
 export default function App() {
-  return (
-    // 我们为子组件的插槽传递了两个DOM，他们均会被渲染
-    <PropsTest color="blue">
-      <p>this is a place</p>
-      <div>another</div>
-    </PropsTest>
-  );
+	return (
+		// 我们为子组件的插槽传递了两个DOM，他们均会被渲染
+		<PropsTest color="blue">
+			<p>this is a place</p>
+			<div>another</div>
+		</PropsTest>
+	);
 }
 ```
 
@@ -484,12 +484,12 @@ export default function App() {
 import React from "react";
 
 export default function PropsTest(props) {
-  return (
-    <div>
-      {props.slot1}
-      {props.slot2}
-    </div>
-  );
+	return (
+		<div>
+			{props.slot1}
+			{props.slot2}
+		</div>
+	);
 }
 ```
 
@@ -499,13 +499,13 @@ export default function PropsTest(props) {
 import PropsTest from "../components/PropsTest";
 
 export default function App() {
-  // 简单的为两个插槽添加了各自的div标签
-  return (
-    <PropsTest
-      slot1={<div>123</div>}
-      slot2={<div>456</div>}
-    />
-  );
+	// 简单的为两个插槽添加了各自的div标签
+	return (
+		<PropsTest
+			slot1={<div>123</div>}
+			slot2={<div>456</div>}
+		/>
+	);
 }
 ```
 
@@ -526,11 +526,11 @@ import React, { Suspense } from "react";
 const LazyTest = React.lazy(() => import("../components/LazyTest"));
 
 export default function App() {
-  return (
-    <Suspense fallback={<div>loading...</div>}>
-      <LazyTest />
-    </Suspense>
-  );
+	return (
+		<Suspense fallback={<div>loading...</div>}>
+			<LazyTest />
+		</Suspense>
+	);
 }
 ```
 
@@ -557,23 +557,23 @@ const MyContext = React.createContext("damn");
 
 // 起始组件
 export default function ContextTest() {
-  return (
-    // Provider透传context
-    <MyContext.Provider value="what">
-      <Demo1 />
-    </MyContext.Provider>
-  );
+	return (
+		// Provider透传context
+		<MyContext.Provider value="what">
+			<Demo1 />
+		</MyContext.Provider>
+	);
 }
 
 // 中间组件
 function Demo1() {
-  return <Demo2 />;
+	return <Demo2 />;
 }
 // 末端组件
 function Demo2() {
-  // useContext获取指定上下文
-  const ctx = useContext(MyContext);
-  return <div>{ctx}</div>;
+	// useContext获取指定上下文
+	const ctx = useContext(MyContext);
+	return <div>{ctx}</div>;
 }
 ```
 
@@ -587,9 +587,9 @@ function Demo2() {
 
 ```jsx
 function Demo2() {
-  return (
-    <MyContext.Consumer>{(value) => <div>{value}</div>}</MyContext.Consumer>
-  );
+	return (
+		<MyContext.Consumer>{(value) => <div>{value}</div>}</MyContext.Consumer>
+	);
 }
 ```
 
@@ -606,8 +606,8 @@ function Demo2() {
 import React from "react";
 
 export const DemoContext = React.createContext({
-  count: 0,
-  toggleCount: () => {},
+	count: 0,
+	toggleCount: () => {},
 });
 ```
 
@@ -621,35 +621,35 @@ import { DemoContext } from "../constant/default-context";
 
 // 被调用的组件
 function ToggleTest() {
-  return (
-    // 解构DemoContext，分为count和toggleCount
-    <DemoContext.Consumer>
-      {({ count, toggleCount }) => (
-        <>
-          <div>{count}</div>
-          <button onClick={toggleCount}>点我加一</button>
-        </>
-      )}
-    </DemoContext.Consumer>
-  );
+	return (
+		// 解构DemoContext，分为count和toggleCount
+		<DemoContext.Consumer>
+			{({ count, toggleCount }) => (
+				<>
+					<div>{count}</div>
+					<button onClick={toggleCount}>点我加一</button>
+				</>
+			)}
+		</DemoContext.Consumer>
+	);
 }
 
 // 主组件
 export default function DeepContext() {
-  // 简单定义一个state
-  const [count, setCount] = useState(0);
-  return (
-    // 因为定义的context是对象，故依葫芦画瓢这里也必须以对象的形式传入value
-    // setCount必须以函数的形式执行，否则react编译报错
-    <DemoContext.Provider
-      value={{
-        count: count,
-        toggleCount: () => setCount(count + 1),
-      }}
-    >
-      <ToggleTest />
-    </DemoContext.Provider>
-  );
+	// 简单定义一个state
+	const [count, setCount] = useState(0);
+	return (
+		// 因为定义的context是对象，故依葫芦画瓢这里也必须以对象的形式传入value
+		// setCount必须以函数的形式执行，否则react编译报错
+		<DemoContext.Provider
+			value={{
+				count: count,
+				toggleCount: () => setCount(count + 1),
+			}}
+		>
+			<ToggleTest />
+		</DemoContext.Provider>
+	);
 }
 ```
 
@@ -667,22 +667,22 @@ export default function DeepContext() {
 import React from "react";
 
 export default function FragmentsTest() {
-  return (
-    <ul>
-      <FragmentsFragment name="tom" />
-      <FragmentsFragment name="jack" />
-      <FragmentsFragment name="har" />
-      <FragmentsFragment name="asd" />
-    </ul>
-  );
+	return (
+		<ul>
+			<FragmentsFragment name="tom" />
+			<FragmentsFragment name="jack" />
+			<FragmentsFragment name="har" />
+			<FragmentsFragment name="asd" />
+		</ul>
+	);
 }
 
 function FragmentsFragment(props) {
-  return (
-    <>
-      <li>{props.name}</li>
-    </>
-  );
+	return (
+		<>
+			<li>{props.name}</li>
+		</>
+	);
 }
 ```
 
@@ -699,26 +699,26 @@ import React from "react";
 
 // 高阶组件HOC
 function withDescription(Comp) {
-  return class extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = { flag: "asd" };
-    }
-    render() {
-      return <Comp data={this.state.flag} />;
-    }
-  };
+	return class extends React.Component {
+		constructor(props) {
+			super(props);
+			this.state = { flag: "asd" };
+		}
+		render() {
+			return <Comp data={this.state.flag} />;
+		}
+	};
 }
 
 // 欲被实例化的组件
 function InnerComp(props) {
-  return <div>{props.data}</div>;
+	return <div>{props.data}</div>;
 }
 
 // 调用高阶组件
 export default function HOCTest() {
-  const Desp = withDescription(InnerComp);
-  return <Desp />;
+	const Desp = withDescription(InnerComp);
+	return <Desp />;
 }
 ```
 
@@ -765,36 +765,36 @@ react 组件必须以大写字母作为开头，否则将会被识别为普通 H
 import React from "react";
 
 export class CustomTextInput extends React.Component {
-  constructor(props) {
-    super(props);
-    // 创建一个 ref 来存储 textInput 的 DOM 元素
-    this.textInput = React.createRef();
-    this.focusTextInput = this.focusTextInput.bind(this);
-  }
+	constructor(props) {
+		super(props);
+		// 创建一个 ref 来存储 textInput 的 DOM 元素
+		this.textInput = React.createRef();
+		this.focusTextInput = this.focusTextInput.bind(this);
+	}
 
-  focusTextInput() {
-    // 直接使用原生 API 使 text 输入框获得焦点
-    // 注意：我们通过 "current" 来访问 DOM 节点
-    this.textInput.current.focus();
-  }
+	focusTextInput() {
+		// 直接使用原生 API 使 text 输入框获得焦点
+		// 注意：我们通过 "current" 来访问 DOM 节点
+		this.textInput.current.focus();
+	}
 
-  render() {
-    // 告诉 React 我们想把 <input> ref 关联到
-    // 构造器里创建的 `textInput` 上
-    return (
-      <div>
-        <input
-          type="text"
-          ref={this.textInput}
-        />
-        <input
-          type="button"
-          value="Focus the text input"
-          onClick={this.focusTextInput}
-        />
-      </div>
-    );
-  }
+	render() {
+		// 告诉 React 我们想把 <input> ref 关联到
+		// 构造器里创建的 `textInput` 上
+		return (
+			<div>
+				<input
+					type="text"
+					ref={this.textInput}
+				/>
+				<input
+					type="button"
+					value="Focus the text input"
+					onClick={this.focusTextInput}
+				/>
+			</div>
+		);
+	}
 }
 ```
 
@@ -807,18 +807,18 @@ export class CustomTextInput extends React.Component {
 
 ```jsx
 export default function RefsDom() {
-  // 获取DOM时需要预先指定好Ref对象
-  const textRef = useRef(null);
-  function changeText() {
-    // 获取DOM并改变内容
-    textRef.current.innerHTML = "asd";
-  }
-  return (
-    <React.Fragment>
-      <div ref={textRef}>normal</div>
-      <button onClick={changeText}>改变数据</button>
-    </React.Fragment>
-  );
+	// 获取DOM时需要预先指定好Ref对象
+	const textRef = useRef(null);
+	function changeText() {
+		// 获取DOM并改变内容
+		textRef.current.innerHTML = "asd";
+	}
+	return (
+		<React.Fragment>
+			<div ref={textRef}>normal</div>
+			<button onClick={changeText}>改变数据</button>
+		</React.Fragment>
+	);
 }
 ```
 

@@ -56,12 +56,15 @@ const posts = useSelector(selectAllPosts);
 
 <br>
 
-#### createAsyncThunk
+### createAsyncThunk
+
+#### 参数与使用介绍
 
 `createAsyncThunk` 用来定义异步请求
 
 参数一为类型前缀，推荐格式为：`slice名称/当前变量名`  
-参数二为异步请求负载，可以使用 fetch 或者 axios
+参数二为异步请求负载，可以使用 fetch 或者 axios  
+参数三为回调函数（可选非必填）
 
 下面用到了一个虚假 JSON 生成接口网站，可以根据我们请求的 URL 自动反馈假的 JSON 数据
 
@@ -130,3 +133,5 @@ dispatch(fetchPosts());
 ```
 
 <br>
+
+### createEntityAdapter

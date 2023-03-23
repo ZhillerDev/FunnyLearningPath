@@ -143,4 +143,128 @@ display=none 完全隐藏，不占据任何空间，可视为元素被删除
 
 <br>
 
-###
+### CSS 单位
+
+| 单位 | 描述                                                                                                                       |
+| ---- | -------------------------------------------------------------------------------------------------------------------------- |
+| em   | 它是描述相对于应用在当前元素的字体尺寸，所以它也是相对长度单位。一般浏览器字体大小默认为 16px，则 2em == 32px；            |
+| rem  | 是根 em（root em）的缩写，rem 作用于非根元素时，相对于根元素字体大小；rem 作用于根元素字体大小时，相对于其出初始字体大小。 |
+| vh   | viewpoint height，视窗高度，1vh=视窗高度的 1%                                                                              |
+| vw   | viewpoint width，视窗宽度，1vw=视窗宽度的 1%                                                                               |
+| vmin | vw 和 vh 中较小的那个。                                                                                                    |
+| vmax | vw 和 vh 中较大的那个。                                                                                                    |
+
+% 相对父元素
+
+<br>
+
+| 单位 | 描述                                  |
+| ---- | ------------------------------------- |
+| cm   | 厘米                                  |
+| mm   | 毫米                                  |
+| in   | 英寸 (1in = 96px = 2.54cm)            |
+| px   | 像素 (1px = 1/96th of 1in)            |
+| pt   | point，大约 1/72 英寸；(1pt = 1/72in) |
+
+<br>
+
+### Position
+
+`static`  
+默认位置；默认为 0。元素将像往常一样流入页面。top，right，bottom，left 和 z-index 属性不适用。
+
+`relative`  
+元素的位置相对于自身进行了调整，而没有更改布局（因此，如果没有放置元素，将为元素留出一定的空隙）。
+
+`absolute`  
+元素从页面流中删除，并且相对于其最接近的祖先（如果有）或相对于初始包含块而定位在指定的位置。绝对定位的盒子可以有边距，并且不会与其他任何边距一起折叠。这些元素不会影响其他元素的位置。
+
+`fixed`  
+将元素从页面流中移除，并将其放置在相对于视口的指定位置，并且在滚动时不会移动。
+
+`sticky`  
+粘性定位是相对定位和固定定位的混合。将该元素视为相对位置，直到它超过指定的阈值为止，此时将其视为固定位置。
+
+<br>
+
+### 供应商前缀
+
+供应商前缀可以为特定的浏览器指定样式
+
+`-webkit-` （Chrome，Safari，Opera 的较新版本，几乎所有的 iOS 浏览器（包括 Firefox for iOS）；基本上是任何基于 WebKit 的浏览器）
+
+`-moz-` （Firefox）
+
+`-o-` （旧的，WebKit 之前的 Opera 版本）
+
+`-ms-` （Internet Explorer 和 Microsoft Edge）
+
+<br>
+
+### 常见布局
+
+> 建议参考掘金文章：https://juejin.cn/post/6844903574929932301#comment
+
+<br>
+
+### CSS3 伪类新增
+
+:root 选择文档的根元素，等同于 html 元素
+
+:empty 选择没有子元素的元素
+
+:target 选取当前活动的目标元素
+
+:not(selector) 选择除 selector 元素意外的元素
+
+:enabled 选择可用的表单元素
+
+:disabled 选择禁用的表单元素
+
+:checked 选择被选中的表单元素
+
+:nth-child(n) 匹配父元素下指定子元素，在所有子元素中排序第 n
+
+nth-last-child(n) 匹配父元素下指定子元素，在所有子元素中排序第 n，从后向前数
+
+:nth-child(odd)
+
+:nth-child(even)
+
+:nth-child(3n+1)
+
+:first-child
+
+:last-child
+
+:only-child
+
+:nth-of-type(n) 匹配父元素下指定子元素，在同类子元素中排序第 n
+
+:nth-last-of-type(n) 匹配父元素下指定子元素，在同类子元素中排序第 n，从后向前数
+
+:nth-of-type(odd)
+
+:nth-of-type(even)
+
+:nth-of-type(3n+1)
+
+:first-of-type
+
+:last-of-type
+
+:only-of-type
+
+::selection 选择被用户选取的元素部分（伪元素）
+
+:first-line 选择元素中的第一行（伪元素）
+
+:first-letter 选择元素中的第一个字符（伪元素）
+
+:after 在元素在该元素之后添加内容（伪元素）
+
+:before 在元素在该元素之前添加内容（伪元素）
+
+<br>
+
+

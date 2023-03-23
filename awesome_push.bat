@@ -1,7 +1,7 @@
 @echo off
 
 ::一些没啥用的设置
-title fukin push
+title quick push
 
 :backhome
 

@@ -36,6 +36,8 @@ Blender+BlenderGIS+OpenTopography 可以实现地图选点并获取对应三维�
 - cache folder 缓存文件夹，默认为 C 盘
 - api key 在这里填入我们刚刚赋值的 api key
 
+![](./images/gis/g3.png)
+
 <br>
 
 还有一个设置需要修改，否则会发生错误，该错误已被解决，请移步至该 issue：https://github.com/domlysz/BlenderGIS/issues/742
@@ -46,6 +48,8 @@ Blender+BlenderGIS+OpenTopography 可以实现地图选点并获取对应三维�
 然后点击 OK
 
 此时确保我们依然选择 `overpass-api.de` 这一项！！！
+
+![](./images/gis/g4.png)
 
 保存并重开 blender  
 错误解决

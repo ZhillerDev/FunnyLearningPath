@@ -98,6 +98,8 @@ Blender+BlenderGIS+OpenTopography 可以实现地图选点并获取对应三维�
 
 这一段会比较卡，请注意保存，免得 blender 直接崩掉
 
+![](./images/gis/g9.png)
+
 <br>
 
 生成完毕

@@ -161,8 +161,12 @@ useEffect(() => {
 
 ### 移动端适配
 
+利用 tailwindcss 的开发特性，实现多端适配，响应式
+
 ```jsx
+// 适配移动端
 <div className="sm:hidden flex flex-1 justify-end items-center">
+	{/*移动端右上角menu点击后下拉菜单的收缩*/}
 	<img
 		src={toggle ? close : menu}
 		alt="menu"
@@ -194,3 +198,5 @@ useEffect(() => {
 	</div>
 </div>
 ```
+
+<br>

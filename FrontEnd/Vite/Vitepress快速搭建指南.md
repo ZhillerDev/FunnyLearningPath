@@ -204,12 +204,12 @@ page 布局可视为空白布局，他会对 markdown 进行渲染，但是不�
 
 ```js
 export default {
-  // 定义在浏览器标签上显示的标题
-  title: "ZerNote",
-  // 大部分主要的主题配置都在里面了
-  themeConfig: {},
-  // 简洁化URL，即我们访问文件时不需要加后缀了，直接 /xxx/xxx即可，不要/xxx/xxx.md
-  cleanUrls: true,
+	// 定义在浏览器标签上显示的标题
+	title: "ZerNote",
+	// 大部分主要的主题配置都在里面了
+	themeConfig: {},
+	// 简洁化URL，即我们访问文件时不需要加后缀了，直接 /xxx/xxx即可，不要/xxx/xxx.md
+	cleanUrls: true,
 };
 ```
 
@@ -370,68 +370,68 @@ themeConfig: {
 
 ```js
 export default {
-  title: "ZerNote",
-  themeConfig: {
-    lang: "zh-CN",
-    logo: "/icons/car.svg",
-    siteTitle: "ZerNote",
-    lastUpdated: true,
-    nav: [
-      {
-        text: "首页",
-        link: "/",
-      },
-      {
-        text: "快速开始",
-        link: "/starter/starter-install",
-        activeMatch: "/starter/",
-      },
-      { text: "开发文档", link: "/document/index", activeMatch: "/document/" },
-    ],
-    socialLinks: [
-      { icon: "github", link: "https://github.com/vuejs/vitepress" },
-    ],
-    footer: {
-      message: "Released under the MIT License.",
-      copyright: "Copyright © 2019-present Evan You",
-    },
-    editLink: {
-      pattern: "https://github.com/vuejs/vitepress/edit/main/docs/:path",
-      text: "Edit this page on GitHub",
-    },
-    lastUpdatedText: "Updated Date",
-    algolia: {
-      appId: "R2IYF7ETH7",
-      apiKey: "599cec31baffa4868cae4e79f180729b",
-      indexName: "index",
-    },
-    docFooter: {
-      prev: "Pagina prior",
-      next: "Proxima pagina",
-    },
-    sidebar: {
-      "/starter/": [
-        {
-          text: "快速开始",
-          collapsed: false,
-          items: [
-            { text: "安装", link: "/starter/starter-install" },
-            { text: "设置", link: "/starter/starter-configuration" },
-          ],
-        },
-        {
-          text: "快速卸载",
-          collapsed: true,
-          items: [{ text: "卸载指南", link: "/starter/starter-uninstall" }],
-        },
-      ],
-    },
-  },
-  cleanUrls: true,
-  aside: true,
-  outline: "deep",
-  outlineBadges: true,
-  outlineTitle: "just an demo",
+	title: "ZerNote",
+	themeConfig: {
+		lang: "zh-CN",
+		logo: "/icons/car.svg",
+		siteTitle: "ZerNote",
+		lastUpdated: true,
+		nav: [
+			{
+				text: "首页",
+				link: "/",
+			},
+			{
+				text: "快速开始",
+				link: "/starter/starter-install",
+				activeMatch: "/starter/",
+			},
+			{ text: "开发文档", link: "/document/index", activeMatch: "/document/" },
+		],
+		socialLinks: [
+			{ icon: "github", link: "https://github.com/vuejs/vitepress" },
+		],
+		footer: {
+			message: "Released under the MIT License.",
+			copyright: "Copyright © 2019-present Evan You",
+		},
+		editLink: {
+			pattern: "https://github.com/vuejs/vitepress/edit/main/docs/:path",
+			text: "Edit this page on GitHub",
+		},
+		lastUpdatedText: "Updated Date",
+		algolia: {
+			appId: "R2IYF7ETH7",
+			apiKey: "599cec31baffa4868cae4e79f180729b",
+			indexName: "index",
+		},
+		docFooter: {
+			prev: "Pagina prior",
+			next: "Proxima pagina",
+		},
+		sidebar: {
+			"/starter/": [
+				{
+					text: "快速开始",
+					collapsed: false,
+					items: [
+						{ text: "安装", link: "/starter/starter-install" },
+						{ text: "设置", link: "/starter/starter-configuration" },
+					],
+				},
+				{
+					text: "快速卸载",
+					collapsed: true,
+					items: [{ text: "卸载指南", link: "/starter/starter-uninstall" }],
+				},
+			],
+		},
+	},
+	cleanUrls: true,
+	aside: true,
+	outline: "deep",
+	outlineBadges: true,
+	outlineTitle: "just an demo",
 };
 ```
 

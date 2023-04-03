@@ -34,8 +34,8 @@ RHS 引用类似于右值引用，即寻找赋值操作的源头，此时值是�
 
 ```js
 function foo(str, a) {
-  eval(str);
-  console.log(a, b);
+	eval(str);
+	console.log(a, b);
 }
 var b = 2;
 foo("var b = 3", 1); // 1,3
@@ -49,13 +49,13 @@ foo("var b = 3", 1); // 1,3
 
 ```js
 function foo() {
-  function bar(a) {
-    i = 3; // 此处的i会被误指定为for中的i
-    console.log(a + i);
-  }
-  for (var i = 0; i < 10; i++) {
-    bar(i * 2); // 无限循环
-  }
+	function bar(a) {
+		i = 3; // 此处的i会被误指定为for中的i
+		console.log(a + i);
+	}
+	for (var i = 0; i < 10; i++) {
+		bar(i * 2); // 无限循环
+	}
 }
 ```
 
@@ -78,8 +78,8 @@ function foo() {
 ```js
 var a = 2;
 (function () {
-  var a = 3;
-  console.log(a); // 3
+	var a = 3;
+	console.log(a); // 3
 })();
 ```
 
@@ -89,9 +89,9 @@ var a = 2;
 ```js
 var a = 2;
 (function IIFE(global) {
-  var a = 3;
-  console.log(a); // 3
-  console.log(global.a); // 2
+	var a = 3;
+	console.log(a); // 3
+	console.log(global.a); // 2
 })(window);
 ```
 
@@ -103,11 +103,11 @@ var a = 2;
 ```js
 var a = 2;
 (function IIFE(def) {
-  def(window);
+	def(window);
 })(function def(global) {
-  var a = 3;
-  console.log(a); // 3
-  console.log(global.a); // 2
+	var a = 3;
+	console.log(a); // 3
+	console.log(global.a); // 2
 });
 ```
 
@@ -150,11 +150,11 @@ foo(); // 1
 var foo;
 
 function foo() {
-  console.log(1);
+	console.log(1);
 }
 
 foo = function () {
-  console.log(2);
+	console.log(2);
 };
 ```
 
@@ -173,13 +173,13 @@ foo = function () {
 
 ```js
 function foo() {
-  var a = 2;
+	var a = 2;
 
-  function bar() {
-    console.log(a);
-  }
+	function bar() {
+		console.log(a);
+	}
 
-  return bar;
+	return bar;
 }
 var baz = foo();
 baz(); // 2
@@ -192,11 +192,11 @@ baz(); // 2
 
 ```js
 for (var i = 1; i <= 5; i++) {
-  (function (j) {
-    setTimeout(() => {
-      console.log(j);
-    }, j * 1000);
-  })(i);
+	(function (j) {
+		setTimeout(() => {
+			console.log(j);
+		}, j * 1000);
+	})(i);
 }
 ```
 
@@ -211,13 +211,13 @@ for (var i = 1; i <= 5; i++) {
 
 ```js
 function CustomModule() {
-  var something = "none";
-  function doSomething() {
-    console.log(something);
-  }
-  return {
-    doSomething: doSomething,
-  };
+	var something = "none";
+	function doSomething() {
+		console.log(something);
+	}
+	return {
+		doSomething: doSomething,
+	};
 }
 
 var module = CustomModule();
@@ -245,7 +245,7 @@ module.doSomething(); // none
 
 ```js
 function foo() {
-  console.log(this.a);
+	console.log(this.a);
 }
 var a = 2;
 foo(); // 2
@@ -262,12 +262,12 @@ foo(); // 2
 ```js
 function foo() {}
 var obj2 = {
-  a: 42,
-  foo: foo,
+	a: 42,
+	foo: foo,
 };
 var obj1 = {
-  a: 2,
-  obj2: obj2,
+	a: 2,
+	obj2: obj2,
 };
 obj1.obj2.foo(); // 42
 ```
@@ -286,8 +286,8 @@ obj1.obj2.foo(); // 42
 ```js
 function foo() {}
 var obj = {
-  a: 2,
-  foo: foo,
+	a: 2,
+	foo: foo,
 };
 var bar = obj.foo;
 var a = 100;
@@ -303,10 +303,10 @@ bar(); // 100
 
 ```js
 function foo() {
-  console.log(this.a);
+	console.log(this.a);
 }
 var obj = {
-  a: 2,
+	a: 2,
 };
 foo.call(obj);
 ```
@@ -316,14 +316,14 @@ apply 和 call 作用一致，好好看代码，理清逻辑关系！！！
 
 ```js
 function foo(sth) {
-  console.log(this.a + sth);
-  return this.a + sth;
+	console.log(this.a + sth);
+	return this.a + sth;
 }
 var obj = {
-  a: 2,
+	a: 2,
 };
 var bar = function () {
-  return foo.apply(obj, arguments);
+	return foo.apply(obj, arguments);
 };
 var b = bar(3); //2 3
 console.log(b); //5
@@ -337,10 +337,10 @@ console.log(b); //5
 
 ```js
 function foo(el) {
-  console.log(el, this.id);
+	console.log(el, this.id);
 }
 var obj = {
-  id: "hello",
+	id: "hello",
 };
 [(1, 2, 3)].forEach(foo, obj); // 1hello 2hello 3hello
 ```
@@ -361,7 +361,7 @@ var obj = {
 
 ```js
 function foo(a) {
-  this.a = a;
+	this.a = a;
 }
 var bar = new foo(2);
 console.log(bar.a); // 2
@@ -388,7 +388,7 @@ DMZ 非军事化区；
 
 ```js
 function foo(a, b) {
-  console.log(a + b);
+	console.log(a + b);
 }
 var dmz = Object.create(null);
 foo.apply(dmz, [2, 3]);
@@ -427,7 +427,7 @@ ES5 新增，为对象内的所有属性都配备属性描述符，使用 `getOw
 
 ```js
 var obj = {
-  a: 2,
+	a: 2,
 };
 
 console.log(Object.getOwnPropertyDescriptor(obj, "a"));
@@ -438,10 +438,10 @@ console.log(Object.getOwnPropertyDescriptor(obj, "a"));
 
 ```js
 Object.defineProperty(obj, "a", {
-  value: 10,
-  writable: true,
-  configurable: true,
-  enumerable: true,
+	value: 10,
+	writable: true,
+	configurable: true,
+	enumerable: true,
 });
 ```
 
@@ -499,15 +499,15 @@ JS`没有`多继承机制！
 
 ```js
 function mixin(source, target) {
-  // 遍历原对象的所有属性
-  for (var ket in source) {
-    // 若新对象内和原对象属性没有重合，那么复制
-    if (!(key in target)) {
-      target[key] = source[key];
-    }
-  }
-  // 返回新对象
-  return target;
+	// 遍历原对象的所有属性
+	for (var ket in source) {
+		// 若新对象内和原对象属性没有重合，那么复制
+		if (!(key in target)) {
+			target[key] = source[key];
+		}
+	}
+	// 返回新对象
+	return target;
 }
 ```
 
@@ -531,18 +531,18 @@ SubTask 使用 Object.create 所创建，这样就委托了父对象 Task；
 
 ```js
 Task = {
-  setID: function (ID) {
-    this.id = ID;
-  },
-  outputID: function () {
-    console.log(this.id);
-  },
+	setID: function (ID) {
+		this.id = ID;
+	},
+	outputID: function () {
+		console.log(this.id);
+	},
 };
 // 让SubTask委托Task
 SubTask = Object.create(Task);
 SubTask.prepareTask = function (ID, label) {
-  this, setID(ID);
-  this.label = label;
+	this, setID(ID);
+	this.label = label;
 };
 ```
 
@@ -565,36 +565,36 @@ ES6 提供的 class 实际上依然是通过 prototype 机制实现的，因为 
 
 ```js
 var Widget = {
-  init: function (width, height) {
-    this.width = width || 50;
-    this.height = height || 50;
+	init: function (width, height) {
+		this.width = width || 50;
+		this.height = height || 50;
 
-    // $elem代表一个元素，这里先初始化为null
-    this.$elem = null;
-  },
+		// $elem代表一个元素，这里先初始化为null
+		this.$elem = null;
+	},
 
-  // 向指定位置插入元素，并且为元素赋予默认的width和height
-  insert: function ($where) {
-    if (this.$elem) {
-      this.$elem
-        .css({
-          width: this.width + "px",
-          height: this.height + "px",
-        })
-        .appendTo($where);
-    }
-  },
+	// 向指定位置插入元素，并且为元素赋予默认的width和height
+	insert: function ($where) {
+		if (this.$elem) {
+			this.$elem
+				.css({
+					width: this.width + "px",
+					height: this.height + "px",
+				})
+				.appendTo($where);
+		}
+	},
 };
 
 var Button = Object.create(Widget);
 
 Button.setup = function (width, height, label) {
-  // 委托调用
-  this.init(width, height);
-  this.label = label || "default";
+	// 委托调用
+	this.init(width, height);
+	this.label = label || "default";
 
-  // 使用jQuery中的$来向指定元素插入text属性！
-  this.$elem = $("<button>").text(this.label);
+	// 使用jQuery中的$来向指定元素插入text属性！
+	this.$elem = $("<button>").text(this.label);
 };
 ```
 
@@ -610,7 +610,7 @@ function Foo() {}
 Foo.prototype.method = function () {};
 var a1 = new Foo();
 if (a1 instanceof Foo) {
-  a1.method();
+	a1.method();
 }
 ```
 
@@ -695,8 +695,8 @@ JSON.stringify 在对象中遇到 undefined、function 和 symbol 时会自动�
 
 ```js
 var a = {
-  b: 42,
-  c: "42",
+	b: 42,
+	c: "42",
 };
 JSON.stringify(a, ["b"]); // "{"b":42}"
 ```
@@ -822,9 +822,9 @@ var a, b;
 a = eval("if(true){b=100;}");
 
 a = do {
-  if (true) {
-    b = 100;
-  }
+	if (true) {
+		b = 100;
+	}
 };
 ```
 
@@ -832,11 +832,11 @@ a = do {
 
 ```js
 function foo() {
-  bar: {
-    console.log("hello");
-    break bar;
-  }
-  console.log("word");
+	bar: {
+		console.log("hello");
+		break bar;
+	}
+	console.log("word");
 }
 foo(); // hello world
 ```

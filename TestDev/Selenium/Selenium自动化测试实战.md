@@ -226,4 +226,164 @@ Alert.send_keys("要输入的内容")
 
 <br>
 
-#### 多网页切换
+### Selenium WebDriver 高级运用
+
+#### selenium 等待机制
+
+页面级等待机制：定义 Selenium 等待页面加载完毕的超时时间  
+使用此函数设置等待时间：`driver.set_page_load_timeout(最长等待秒数)`
+
+<br>
+
+元素级等待：常用于现代页面中的 ajax 请求返回整个过程的等待时间
+
+- 强制等待：直接 time.sleep(3)强制睡眠
+- 隐式等待：使用该代码设置宽限时间：`webdriver.implicitly_wait(等待秒数)`
+- 显式等待（最推荐使用）：`WebDriverWait(WebDriver实例, 超时秒数, 检测时间间隔[可选], 可忽略异常集合[可选] )`
+
+<br>
+
+脚本级等待机制：设置异步脚本超时时间  
+`driver.set_script_timeout(最长等待秒数)`
+
+<br>
+
+#### 键鼠模拟
+
+> 操作链中涉及的所有 WebElement 元素在操作链执行时必须同时存在，且处于可操作状态
+
+ActionChains 操作链，使用流的形式依次处理模拟事件
+
+```py
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains # 记住导包
+
+driver = webdriver.Chrome()
+driver.get("https://www.baidu.com")
+
+# ActionChains接收一个webdriver对象作为参数
+# 链式调用的形式模拟点击
+ActionChains(driver).click(driver.find_element(By.LINK_TEXT, "登录")).perform()
+```
+
+<br>
+
+复杂操作链模拟：拖放操作
+
+```html
+<html>
+	<head>
+		<style type="text/css">
+			#div1 {
+				width: 300px;
+				height: 100px;
+				padding: 10px;
+				border: 1px solid #aaaaaa;
+			}
+		</style>
+		<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+		<script src="http://apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+		<script type="text/javascript">
+			$(function () {
+				$("#drag1").draggable();
+				$("#div1").droppable({
+					drop: function (event, ui) {
+						alert("图片放置成功");
+					},
+				});
+			});
+		</script>
+	</head>
+
+	<body>
+		<p>请把图片拖放到方框中：</p>
+		<div id="div1"></div>
+		<br />
+		<img
+			id="drag1"
+			src="https://cdn.ptpress.cn/pubcloud/3/app/0718A6B0/cover/20191204BD
+54009A.png"
+		/>
+	</body>
+</html>
+```
+
+```py
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+
+driver = webdriver.Chrome()
+driver.get("D:\\TestDragAndDrop.html")
+
+ActionChains(driver)\
+    .click_and_hold(driver.find_element(By.ID, "drag1"))\
+    .move_to_element(driver.find_element(By.ID, "div1"))\
+    .release()\
+    .perform()
+```
+
+<br>
+
+组合键的实现，`actionchains` 精准控制组合键按下与弹起的动作
+
+```py
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
+
+driver = webdriver.Chrome()
+driver.get("https://www.baidu.com")
+
+baiduSearchInput = driver.find_element(By.ID, "kw")
+baiduSearchInput.send_keys("hello world")
+
+ActionChains(driver)\
+    .key_down(Keys.CONTROL)\
+    .send_keys("a")\
+    .key_up(Keys.CONTROL) \
+    .pause(3)\
+    .key_down(Keys.CONTROL) \
+    .send_keys("x") \
+    .key_up(Keys.CONTROL) \
+    .pause(3) \
+    .key_down(Keys.CONTROL) \
+    .send_keys("v") \
+    .key_up(Keys.CONTROL) \
+    .pause(3) \
+    .send_keys(Keys.BACKSPACE)\
+    .pause(3)\
+    .send_keys(Keys.ENTER)\
+    .perform()
+```
+
+<br>
+
+#### 操作 Cookie
+
+获取 cookie 的两种方式：
+
+```py
+driver.get_cookies()  #获取所有的cookie对象集合
+driver.get_cookie(cookie名称)   #根据名称获取单个cookie
+
+driver.add_cookie(cookie对象) # 增加cookie
+driver.delete_all_cookies()  #删除全部Cookie
+driver.delete_cookie(cookie名称)  #按名称删除指定Cookie
+```
+
+<br>
+
+#### 浏览器启动参数
+
+浏览器实例时可以附加很多参数，这是所有参数的默认值
+
+```py
+driver = webdriver.Chrome(executable_path='chromedriver', port=0, options=None,
+service_args=None, desired_capabilities=None, service_log_path=None, chrome_options=
+None, keep_alive=True)
+```
+
+<br>

@@ -204,3 +204,26 @@ webElement.rect #获取位置及大小对象
 <br>
 
 #### 浏览器弹出框
+
+首先通过以下代码获取 alert 对象后，才可以进行后续操作
+
+```py
+driver.switch_to.alert
+```
+
+<br>
+
+对 Alert 对象的操作（通过上面获取到对象后）
+
+```py
+Alert.accept()  #单击"确认"按钮
+Alert.dismiss()  #单击"取消"按钮
+
+Alert.text # 获取文本
+
+Alert.send_keys("要输入的内容")
+```
+
+<br>
+
+#### 多网页切换

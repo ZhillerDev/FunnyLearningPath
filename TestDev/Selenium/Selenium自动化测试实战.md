@@ -387,3 +387,23 @@ None, keep_alive=True)
 ```
 
 <br>
+
+#### JS 执行器进行深度操作
+
+```py
+webdriver.execute_script("JavaScript脚本", 自定义参数集（可选）) #执行同步脚本
+webdriver.execute_async_script("JavaScript脚本", 自定义参数集（可选）) #执行异步脚本
+```
+
+异步脚本中，JavaScript 是异步处理的，但是 Selenium 脚本是同步执行的  
+所以异步脚本必须存在一个 callback 回调函数，selenium 会时刻监测此回调函数，以实现异步 JS 平稳执行
+
+<br>
+
+### SeleniumGrid 基本
+
+> 原书解释：Selenium Grid 是由一个 Hub（入口服务）及多个 Node（运行节点）组成的集群。该集群提供远程操作浏览器的服务，通过 Selenium Grid，能够在远程机器的浏览器上执行操作命令并返回执行结果。
+
+<br>
+
+#### 部署

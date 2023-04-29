@@ -170,3 +170,184 @@ bool isNumber(string s) {
 ```
 
 <br>
+
+#### 把字符串转换成整数
+
+> https://leetcode.cn/problems/ba-zi-fu-chuan-zhuan-huan-cheng-zheng-shu-lcof/description/?envType=study-plan-v2&id=coding-interviews
+
+此题需要注意三个关键点：符号位正负判断、数值累加是否越界、无关字符忽略
+
+```cpp
+int StrToInt(string str) {
+    int res = 0;  // 保存转换结果
+    int sign = 1;  // 符号标志，默认为正号
+    int i = 0;  // 遍历字符串
+    int n = str.size();
+
+    // 处理空白字符
+    while (i < n && str[i] == ' ') i++;
+
+    // 处理符号
+    if (i < n && (str[i] == '+' || str[i] == '-')) {
+        sign = (str[i] == '-') ? -1 : 1;
+        i++;
+    }
+
+    // 处理数字部分
+    while (i < n && isdigit(str[i])) {
+        int digit = str[i] - '0';
+
+        // 判断是否溢出
+        if (res > INT_MAX / 10 || (res == INT_MAX / 10 && digit > INT_MAX % 10)) {
+            return (sign == 1) ? INT_MAX : INT_MIN;
+        }
+
+        // 逐位累加数值
+        res = res * 10 + digit;
+        i++;
+    }
+
+    // 最后输出时才乘以符号位变号
+    return sign * res;
+}
+
+```
+
+<br>
+
+### 链表
+
+#### 从头到尾打印链表
+
+> https://leetcode.cn/problems/cong-wei-dao-tou-da-yin-lian-biao-lcof/description/?envType=study-plan-v2&id=coding-interviews
+
+得益于栈后进先出的特性，我们可以使用栈来实现这一操作
+
+```cpp
+#include <vector>
+#include <stack>
+using namespace std;
+
+// Definition for singly-linked list.
+struct ListNode {
+    int val;
+    ListNode *next;
+    ListNode(int x) : val(x), next(NULL) {}
+};
+
+class Solution {
+public:
+    vector<int> reversePrint(ListNode* head) {
+        // 创建一个栈用于存放链表节点值
+        stack<int> s;
+        // 遍历链表，将节点值依次入栈
+        while (head) {
+            s.push(head->val);
+            head = head->next;
+        }
+        // 创建一个vector，将栈中元素依次弹出并添加到vector中
+        vector<int> res;
+        while (!s.empty()) {
+            res.push_back(s.top());
+            s.pop();
+        }
+        return res;
+    }
+};
+
+```
+
+<br>
+
+#### 翻转链表
+
+```cpp
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        // 如果头结点为空或者只有一个节点，则直接返回头结点
+        if (head == nullptr || head->next == nullptr) {
+            return head;
+        }
+        // 定义两个指针，分别指向前一个节点和当前节点
+        ListNode *pre = nullptr;
+        ListNode *cur = head;
+        // 定义一个临时指针，用于记录当前节点的下一个节点
+        ListNode *temp = nullptr;
+        // 遍历链表，将当前节点指向前一个节点
+        while (cur != nullptr) {
+            temp = cur->next;  // 记录当前节点的下一个节点
+            cur->next = pre;   // 将当前节点指向前一个节点
+            pre = cur;         // 将前一个节点指针指向当前节点
+            cur = temp;        // 将当前节点指针指向下一个节点
+        }
+        return pre;            // 返回新的头结点
+    }
+};
+
+```
+
+<br>
+
+#### 复杂链表的绘制
+
+> https://leetcode.cn/problems/fu-za-lian-biao-de-fu-zhi-lcof/description/?envType=study-plan-v2&id=coding-interviews
+
+```cpp
+#include <unordered_map>
+
+using namespace std;
+
+class Node {
+public:
+    int val;
+    Node* next;
+    Node* random;
+
+    Node(int _val) {
+        val = _val;
+        next = NULL;
+        random = NULL;
+    }
+};
+
+class Solution {
+public:
+    Node* copyRandomList(Node* head) {
+        // 头结点为空代表不存在，直接返回空
+        if (head == nullptr) {
+            return nullptr;
+        }
+
+        // 使用unordered_map存储新旧节点的对应关系
+        unordered_map<Node*, Node*> nodeMap;
+        Node* cur = head;
+
+        // 第一遍循环，将旧链表的节点作为key，新链表的节点作为value存入nodeMap中
+        while (cur != nullptr) {
+            nodeMap[cur] = new Node(cur->val);
+            cur = cur->next;
+        }
+        cur = head;
+
+        // 第二遍循环，根据nodeMap中存储的对应关系，连接新链表的next和random指针
+        while (cur != nullptr) {
+            nodeMap[cur]->next = nodeMap[cur->next];
+            nodeMap[cur]->random = nodeMap[cur->random];
+            cur = cur->next;
+        }
+        return nodeMap[head];
+    }
+};
+
+```
+
+<br>

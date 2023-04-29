@@ -351,3 +351,242 @@ public:
 ```
 
 <br>
+
+### 双指针
+
+#### 删除链表的节点
+
+> https://leetcode.cn/problems/shan-chu-lian-biao-de-jie-dian-lcof/?envType=study-plan-v2&id=coding-interviews
+
+双指针，可以保证取到的节点都不越界
+
+```cpp
+ListNode* deleteNode(ListNode* head, int val) {
+    if (head == nullptr) return nullptr;  // 特判，链表为空
+
+    if (head->val == val) return head->next;  // 特判，头节点就是要删除的节点
+
+    ListNode* pre = head;
+    ListNode* cur = head->next;
+    while (cur != nullptr && cur->val != val) {  // 找到要删除的节点
+        pre = cur;
+        cur = cur->next;
+    }
+
+    if (cur != nullptr) pre->next = cur->next;  // 找到了要删除的节点，将前一个节点指向后一个节点
+
+    return head;  // 返回链表的头节点
+}
+```
+
+<br>
+
+#### 链表中倒数第 K 个节点
+
+> https://leetcode.cn/problems/lian-biao-zhong-dao-shu-di-kge-jie-dian-lcof/?envType=study-plan-v2&id=coding-interviews
+
+首先将两个指针都指向头节点，然后将其中一个指针先向前移动 k-1 步，接着两个指针同时向前移动，直到第二个指针到达链表末尾，此时第一个指针所指的节点就是倒数第 k 个节点
+
+```cpp
+/*
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* getKthFromEnd(ListNode* head, int k) {
+        ListNode *slow = head, *fast = head;
+        for(int i = 0; i < k; i++) {
+            fast = fast->next;
+        }
+        while(fast != nullptr) {
+            slow = slow->next;
+            fast = fast->next;
+        }
+        return slow;
+    }
+};
+
+```
+
+<br>
+
+#### 合并两个排序的链表
+
+> https://leetcode.cn/problems/he-bing-liang-ge-pai-xu-de-lian-biao-lcof/description/?envType=study-plan-v2&id=coding-interviews
+
+一个比较复杂但是行数很少的递归形式题解
+
+每次比较两个链表的头结点，将较小的那个接到结果链表的末尾。再将剩余的链表继续递归调用函数进行合并。当其中一个链表为空时，将另一个链表剩余的部分接到结果链表末尾。最后返回结果链表头结点即可
+
+```cpp
+ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
+
+    // 因为两个链表不一定等长，如果一个遍历完毕，则另一个直接一一接上去即可
+    if (!l1) return l2;
+    if (!l2) return l1;
+
+    if (l1->val <= l2->val) {
+        l1->next = mergeTwoLists(l1->next, l2);
+        return l1;
+    } else {
+        l2->next = mergeTwoLists(l1, l2->next);
+        return l2;
+    }
+}
+```
+
+<br>
+
+#### 两个链表的第一个公共节点
+
+> https://leetcode.cn/problems/liang-ge-lian-biao-de-di-yi-ge-gong-gong-jie-dian-lcof/?envType=study-plan-v2&id=coding-interviews
+
+假设两个链表分别为 A 和 B，且 A 的长度为 a，B 的长度为 b。当两个链表的长度相等时，两个指针同时遍历两个链表，直到找到第一个相同的节点。当两个链表长度不等时，长链表的指针先遍历 $|a-b|$ 个节点，然后两个指针同时遍历链表，直到找到第一个相同的节点
+
+```cpp
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        ListNode *p1 = headA, *p2 = headB;
+        while (p1 != p2) {
+            p1 = p1 == nullptr ? headB : p1->next;
+            p2 = p2 == nullptr ? headA : p2->next;
+        }
+        return p1;
+    }
+};
+```
+
+<br>
+
+#### 调整数组顺序使奇数位于偶数前面
+
+> https://leetcode.cn/problems/diao-zheng-shu-zu-shun-xu-shi-qi-shu-wei-yu-ou-shu-qian-mian-lcof/?envType=study-plan-v2&id=coding-interviews
+
+基本过程如下
+
+1. 定义两个指针 i 和 j，分别指向数组的首尾两端。
+2. 当 `i<j` 时，执行以下操作：
+   如果 `a[i]`是偶数，`a[j]`是奇数，则交换 `a[i]`和 `a[j]`的值；
+   如果 `a[i]`是奇数，则 i 自增 1；
+   如果 `a[j]`是偶数，则 j 自减 1。
+3. 当 i>=j 时，排序完成。
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+void sortArrayByParity(vector<int>& nums) {
+    int i = 0, j = nums.size() - 1;
+    while (i < j) {
+        if (nums[i] % 2 == 0 && nums[j] % 2 == 1) {
+            swap(nums[i], nums[j]);
+        }
+        if (nums[i] % 2 == 1) {
+            i++;
+        }
+        if (nums[j] % 2 == 0) {
+            j--;
+        }
+    }
+
+    return nums;
+}
+```
+
+<br>
+
+#### 和为 s 的两个数字
+
+> https://leetcode.cn/problems/he-wei-sde-liang-ge-shu-zi-lcof/description/?envType=study-plan-v2&id=coding-interviews
+
+根据此思路组织代码
+
+1. 定义两个指针 i 和 j，分别指向数组的首尾两端。
+2. 当 `i<j` 时，执行以下操作：
+   如果 `a[i]+a[j]`等于 s，则返回 `a[i]`和 `a[j]`的值；
+   如果 `a[i]+a[j]`小于 s，则 i 自增 1；
+   如果 `a[i]+a[j]`大于 s，则 j 自减 1。
+3. 当 `i>=j` 时，数组中不存在两个数的和等于 s。
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+vector<int> findNumbersWithSum(vector<int>& nums, int s) {
+    int i = 0, j = nums.size() - 1;
+    while (i < j) {
+        int sum = nums[i] + nums[j];
+        if (sum == s) {
+            return {nums[i], nums[j]};
+        }
+        if (sum < s) {
+            i++;
+        }
+        if (sum > s) {
+            j--;
+        }
+    }
+    return {};
+}
+```
+
+<br>
+
+#### 翻转单词顺序
+
+> https://leetcode.cn/problems/fan-zhuan-dan-ci-shun-xu-lcof/?envType=study-plan-v2&id=coding-interviews
+
+双指针解决问题
+
+```cpp
+class Solution {
+public:
+    string reverseWords(string s) {
+        string res;
+        int n = s.size();
+        if(n == 0) return res;
+        int right = n - 1;
+        while(right >= 0){
+            //从后往前寻找第一字符
+            while(right >= 0 && s[right] == ' ') right--;
+            if(right < 0) break;
+
+            //从后往前寻找第一个空格
+            int left = right;
+            while( left >= 0 && s[left] != ' ' ) left--;
+
+            //添加单词到结果
+            res += s.substr(left + 1, right - left);
+            res += ' ';
+
+            //继续往前分割单词
+            right = left;
+        }
+        //去除最后一个字符空格
+        if (!res.empty()) res.pop_back();
+        return res;
+    }
+};
+```
+
+<br>
+
+### 栈与队列

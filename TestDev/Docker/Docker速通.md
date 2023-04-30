@@ -157,3 +157,94 @@ docker commit -m "Added hello.txt file" mycontainer myimage:latest
 <br>
 
 ### dockerfile
+
+dockerfile 指令表
+
+```shell
+Dockerfile 指令选项:
+
+FROM                  #基础镜像 。 （centos）
+MAINTAINER            #镜像的作者和邮箱。（已被弃用，结尾介绍代替词）
+RUN                   #镜像构建的时候需要执行的命令。
+CMD                   #类似于 RUN 指令，用于运行程序（只有最后一个会生效，可被替代）
+EXPOSE                #对外开放的端口。
+ENV                   #设置环境变量，定义了环境变量，那么在后续的指令中，就可以使用这个环境变量。
+ADD                   # 步骤：tomcat镜像，这个tomcat压缩包。添加内容。
+COPY                  #复制指令，将文件拷贝到镜像中。
+VOLUME                #设置卷，挂载的主机目录。
+USER                  #用于指定执行后续命令的用户和用户组，
+                       这边只是切换后续命令执行的用户（用户和用户组必须提前已经存在）。
+WORKDIR               #工作目录（类似CD命令）。
+ENTRYPOINT            #类似于 CMD 指令，但其不会被 docker run
+                       的命令行参数指定的指令所覆盖，会追加命令。
+ONBUILD               #当构建一个被继承Dokcerfile，就会运行ONBUILD的指令。出发执行。
+
+
+注意：CMD类似于 RUN 指令，用于运行程序，但二者运行的时间点不同:
+CMD 在docker run 时运行。
+RUN 是在 docker build。
+作用：为启动的容器指定默认要运行的程序，程序运行结束，容器也就结束。
+CMD 指令指定的程序可被 docker run 命令行参数中指定要运行的程序所覆盖。
+如果 Dockerfile 中如果存在多个 CMD 指令，仅最后一个生效。
+
+LABEL（MAINTALNER已经被弃用了，目前是使用LABEL代替）
+LABEL 指令用来给镜像添加一些元数据（metadata），以键值对的形式，语法格式如下：
+LABEL <key>=<value> <key>=<value> <key>=<value> ...
+比如我们可以添加镜像的作者：
+LABEL org.opencontainers.image.authors="runoob"
+
+```
+
+<br>
+
+Dockerfile 关键字务必使用全大写
+
+docker 是根据 dockerfile 来构建 image 的
+
+`docker history [镜像名称]` 可以查看对应镜像的构建历史记录
+
+<br>
+
+#### 登录 dockerhub
+
+在 linux 命令行中登录 dockerhub 之前，我们需要到对应的网站上注册一个账号
+
+然后回到命令行，执行登录操作 `docker login`  
+此时叫你输入账户名与密码，照做即可
+
+<br>
+
+#### 制作个人镜像
+
+首先确保我们已经下载了 centos 镜像，我们将在 centos 基础上生成我们自己的一个镜像文件
+
+随意创建一个文件夹，使用 vim 编辑新的文件 `vim mydockerfile`
+
+mydockerfile 写入如下脚本，作为我们的编译选项（具体代码意思可以查询上表，或者直接看英文应该也可以直到意思）
+
+```
+FROM centos
+MAINTAINER demo<test@qq.com>
+ENV MYPATH /usr/local
+WORKDIR $MYPATH
+CMD echo #MYPATH
+CMD echo "hello centos7"
+CMD /bin/bash
+```
+
+然后进行打包 `docker build -f mydockerfile -t hw:1.0 .`  
+（特别注意，代码行末有一个圆点！！！别忘了！！！）
+
+<br>
+
+构建完毕，使用 `docker images` 即可查看我们刚刚构建的自定义镜像了
+
+之后对我们的镜像打标注 tag `docker tag [容器完整名] [dockerhub用户名]/[仓库名]`
+
+标注玩意后直接 push `docker push [用户名]/[仓库名]`
+
+> 容器完整名意思是，如果你定义的容器版本为 1.0，那么完整名应该为 demo:1.0 ，否则默认会被识别为 latest
+
+<br>
+
+### docker 网络

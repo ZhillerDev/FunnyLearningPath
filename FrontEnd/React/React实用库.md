@@ -6,9 +6,11 @@
 
 ### 核心
 
-路由 `npm i react-router`
+路由 `npm install react-router-dom localforage match-sorter sort-by`
 
 容器管理（经典 redux） `npm i redux`
+
+Mobx `npm install --save mobx mobx-react-lite`
 
 <br>
 

@@ -223,15 +223,15 @@ HTML 会对符号进行编码；
 
 ```html
 <script>
-  $ms = "tmac";
-  if ($ms.length != 0) {
-    if ($ms == "tmac") {
-      $("#fromjs").text("tmac确实厉害,看那小眼神..");
-    } else {
-      //            alert($ms);
-      $("#fromjs").text("无论如何不要放弃心中所爱..");
-    }
-  }
+	$ms = "tmac";
+	if ($ms.length != 0) {
+		if ($ms == "tmac") {
+			$("#fromjs").text("tmac确实厉害,看那小眼神..");
+		} else {
+			//            alert($ms);
+			$("#fromjs").text("无论如何不要放弃心中所爱..");
+		}
+	}
 </script>
 ```
 
@@ -395,5 +395,3 @@ bingo!成功取得所有数据
 <br>
 
 ### 反序列化
-
-

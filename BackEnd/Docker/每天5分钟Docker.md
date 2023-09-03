@@ -198,3 +198,57 @@ TIPS：当你不指定 tag 时，默认 latest，实际上你无需纠结是否�
 ## Docker 容器
 
 <br>
+
+### 运行容器
+
+可以让容器执行一个死循环函数，让他一直保持运行状态
+
+`docker ps`指令可以查看容器状态，各个容器拥有各自的短 ID 和长 ID
+
+<br>
+
+进入处于后台的容器
+
+- `docker attach [长ID或者短ID]`
+- `docker exec -it [短ID或者长ID] bash`
+
+attach 直接进入容器启动命令的终端，不会启动新的进程  
+exec 则是在容器中打开新的终端，并且可以启动新的进程
+
+<br>
+
+容器分为工具类容器和服务类容器
+
+工具类容器使用 `exec -it` 进入  
+服务类容器一般使用 `docker run -it [容器名称]`启动
+
+<br>
+
+### 资源限制
+
+容器可以使用的内存包括：物理内存与 swap
+
+- `--memory`：设置内存的使用限额
+- `--memory-swap`：设置内存+swap 的使用限额
+
+<br>
+
+所有容器默认情况平等使用 CPU 资源  
+必要情况可以使用 ` --cpu-shares` 来设置容器权重，以获得更高的 CPU 使用权
+
+<br>
+
+`Block IO` 是另一种可以限制容器使用的资源。Block IO 指的是磁盘的读写，docker 可通过设置权重、限制 bps 和 iops 的方式控制容器读写磁盘的带宽
+
+<br>
+
+### 实现容器的底层技术
+
+`cgroup` 全称 `Control Group`。Linux 操作系统通过 cgroup 可以设置进程使用 CPU、内存和 IO 资源的限额。
+
+`namespace` 管理着 host 中全局唯一的资源，并可以让每个容器都觉得只有自己在使用它。  
+换句话说，namespace 实现了容器间资源的隔离。
+
+<br>
+
+## Docker 网络

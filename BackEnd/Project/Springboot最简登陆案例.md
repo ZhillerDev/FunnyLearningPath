@@ -187,45 +187,74 @@ public class MainController {
 ```html
 <!-- index.html -->
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org/" lang="ch">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Title</title>
-  </head>
-  <body>
-    <form action="/login" method="post">
-      账户：<input type="text" placeholder="请输入用户名" name="username" />
-      密码：<input type="password" placeholder="******" name="password" />
-      <input type="submit" value="登陆！" />
-    </form>
-  </body>
+<html
+	xmlns:th="http://www.thymeleaf.org/"
+	lang="ch"
+>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Title</title>
+	</head>
+	<body>
+		<form
+			action="/login"
+			method="post"
+		>
+			账户：<input
+				type="text"
+				placeholder="请输入用户名"
+				name="username"
+			/>
+			密码：<input
+				type="password"
+				placeholder="******"
+				name="password"
+			/>
+			<input
+				type="submit"
+				value="登陆！"
+			/>
+		</form>
+	</body>
 </html>
 
 <!-- error.html -->
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org/" lang="ch">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Title</title>
-  </head>
-  <body>
-    <h2>登陆失败，请重新登陆！</h2>
-    <form action="/reindex" method="get">
-      <input type="submit" value="返回登陆" />
-    </form>
-  </body>
+<html
+	xmlns:th="http://www.thymeleaf.org/"
+	lang="ch"
+>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Title</title>
+	</head>
+	<body>
+		<h2>登陆失败，请重新登陆！</h2>
+		<form
+			action="/reindex"
+			method="get"
+		>
+			<input
+				type="submit"
+				value="返回登陆"
+			/>
+		</form>
+	</body>
 </html>
 
 <!-- 登陆成功后页面 -->
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org/" lang="ch">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Title</title>
-  </head>
-  <body>
-    <h2>欢迎使用管理系统！</h2>
-  </body>
+<html
+	xmlns:th="http://www.thymeleaf.org/"
+	lang="ch"
+>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Title</title>
+	</head>
+	<body>
+		<h2>欢迎使用管理系统！</h2>
+	</body>
 </html>
 ```
 

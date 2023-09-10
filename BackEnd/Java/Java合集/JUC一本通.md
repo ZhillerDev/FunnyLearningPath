@@ -604,3 +604,22 @@ public class UnsafeAccessor {
 ## 共享模型-不可变
 
 <br>
+
+### 不可变对象
+
+JAVA8 提供了一个日期格式化类：`DateTimeFormatter`  
+它是不可变的，既然不可变就自然没有并发修改问题了！
+
+<br>
+
+众所周知，string 类是 final 的，对其数据修改的操作都是新建一个 string 对象然后拷贝进去并返回给你新的对象
+
+这种通过创建副本对象来避免共享的手段称之为 `保护性拷贝（defensive copy）`
+
+<br>
+
+## 共享模型-工具
+
+<br>
+
+### 线程池

@@ -40,3 +40,13 @@ ES7.17.3 及以下，仅需 JDK1.8 即可；
 TIPS:如果你使用的是低版本的 ES，可以忽略掉这一点
 
 <br>
+
+### java.lang.UnsupportedOperationException
+
+JDK 版本太高了
+
+你现在用的可能是 ES7 及以前的版本
+
+推荐直接 JDK1.8
+
+<br>

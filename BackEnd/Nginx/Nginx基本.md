@@ -481,3 +481,125 @@ location /api/ {
 ```
 
 <br>
+
+#### rewrite
+
+rewrite 进行重定向，
+
+```conf
+location /{
+    rewrite ^/([0-9]+).html$  /index.jsp?pageNum=$1  break;
+}
+```
+
+当我们访问 `xxxx/xxx.html` 时，就会自动替换为 `/index.jsp?pageNum=xxx` 来进行请求
+
+rewrite 末尾的一个参数是标志位，有四个标志位供我们选择：
+
+1. last：表示完成当前的 rewrite 指令后，停止处理其他的 rewrite 指令，并将重写后的 URL 用于后续的处理。
+2. break：与 last 类似，但是不再进行其他的 Nginx 配置指令处理，而是直接返回重写后的 URL。
+3. redirect：将 URL 重定向到新的地址，并返回 302 重定向响应给客户端。
+4. permanent：与 redirect 类似，但是返回 301 永久重定向响应给客户端。
+5. break：停止当前的 rewrite 指令，并将控制权交给 Nginx 的其他处理指令继续处理请求。
+6. if：用于在 rewrite 指令中进行条件判断。
+
+<br>
+
+### 防盗链
+
+#### 防盗链原理
+
+我们在网站中设置了静态资源，为避免其他用户直接引用该静态资源盗刷流量，为此需要设置防盗链机制组织这些用户使用静态资源
+
+目前比较有效的一个方法就是使用 referer 检查，阻止异常来源的访问
+
+<br>
+
+#### valid 检测
+
+`valid_referers` 设置允许通过的 referer
+
+使用 if 判断 `invalid_referer` ，也就是不被允许的 referers 应该返回的状态码
+
+```conf
+location ~*/(js|img|css) {
+    valid_referers 192.168.113.144;
+    if($invalid_referer){
+        return 403;
+    }
+}
+```
+
+<br>
+
+加上 none 参数将允许无 referer 头的请求通过
+
+```conf
+location ~*/(js|img|css) {
+    valid_referers none 192.168.113.144;
+    if($invalid_referer){
+        return 403;
+    }
+}
+```
+
+<br>
+
+#### 配置错误页面
+
+配合 error_page 参数，来返回对应的报错界面
+
+```conf
+server {
+    ...
+
+    location ~*/(js|img|css){
+        valid_referers 192.168.113.144
+        if($invalid_referer){
+            # 返回状态码500
+            return 500
+        }
+    }
+
+    # 设置500状态码对应的返回界面
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   www/www;
+    }
+}
+```
+
+<br>
+
+或者借助 rewrite 返回一张 404 图片
+
+```conf
+location ~*/(js|img|css){
+    valid_referers 192.168.113.144
+    if($invalid_referer){
+        # 返回静态资源图片
+        rewrite ^/ /img/x.jpg break;
+    }
+}
+```
+
+<br>
+
+### 高可用场景
+
+#### 场景分析
+
+![](./img/basic/n4.png)
+
+后端服务器挂了可以通过 nginx 轮询机制来自动切换，但 nginx 自己挂掉了就需要其他办法来解决
+
+借助 keepalive 设置 `主-备` 两台 nginx 服务器
+
+- 主 nginx：负责转发代理以及后端服务器健康状态检查
+- 备 nginx：仅检查后端服务器健康状态
+
+当主 nginx 挂了，就会启用备 nginx 接替其作用
+
+<br>
+
+#### keepalive

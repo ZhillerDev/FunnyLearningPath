@@ -603,3 +603,89 @@ location ~*/(js|img|css){
 <br>
 
 #### keepalive
+
+首先需要安装 `keepalived` 依赖 `yum install keepalived -y`
+
+进入对应文件夹修改 keepalived 配置文件：`/etc/keepalived/keepalivec.conf`
+
+```conf
+global_defs {
+  notification_email {
+    acassen@firewall.loc;  // 接收通知的电子邮件地址
+    failover@firewall.loc;
+    sysadmin@firewall.loc;
+  }
+
+  notification_email_from Alexandre.Cassen@firewall.loc;  // 通知电子邮件的发件人地址
+  smtp_server 192.168.200.1;  // SMTP服务器地址
+  smtp_connect_timeout 30;  // SMTP连接超时时间（秒）
+  router_id LVS_DEVEL;  // 路由器的标识
+}
+
+vrrp_script chk_http_port {
+  script "/usr/local/src/nginx_check.sh";  // 要运行的检查脚本的路径
+  interval 2;  // 检查脚本执行的间隔（秒）
+  weight 2;  // 脚本的权重
+}
+
+vrrp_instance VI_1 {
+  state MASTER;  // 当前服务器的状态，可以是 MASTER 或 BACKUP
+  interface eth0;  // 使用的网络接口
+  virtual_router_id 51;  // 虚拟路由器的ID，主备机必须相同
+  priority 100;  // 优先级，主机值较大，备份机值较小
+  advert_int 1;  // 广告发送的时间间隔
+  authentication {
+    auth_type PASS;  // 认证类型
+    auth_pass 1111;  // 认证密码
+  }
+  virtual_ipaddress {
+    192.168.17.50;  // VRRP虚拟地址
+  }
+}
+```
+
+与此同时，编写检查脚本 `/usr/local/src/nginx_check.sh`
+
+脚本用于检查 Nginx 服务是否在运行。如果 Nginx 服务没有运行，它会尝试启动 Nginx，并在启动失败后终止 `Keepalived` 进程
+
+```sh
+#!/bin/bash
+
+A=`ps -C nginx �Cno-header |wc -l`
+if [ $A -eq 0 ];then
+    /usr/local/nginx/sbin/nginx
+    sleep 2
+    if [ `ps -C nginx --no-header |wc -l` -eq 0 ];then
+        killall keepalived
+    fi
+fi
+```
+
+<br>
+
+`VRRP` 提供了一个检查脚本，实现定期检查 MASTER 是否存活以便切换主备主机
+
+`virtual_ipaddress` 参数设置备份 nginx 服务器的地址（当主 nginx 服务器挂掉后就会启用它）
+
+<br>
+
+#### 主备主机
+
+上面只是配置了一个主机的 keepalived，此时我们还需要为另一个备用 nginx 配置 keepalived
+
+操作方式和上面完全一致，但特别注意 `virtual_router_id` 字段，主机和备用机都必须一致
+
+<br>
+
+### CA 证书与加密
+
+#### 不安全的 http 协议
+
+![](./img/basic/n5.png)
+
+直接使用 http 协议进行传输而不使用任何加密算法无异于让数据裸奔  
+其一是可能被不法分子拦截并获取数据；其二可使用中间人攻击伪造请求者来截取数据
+
+上图表示使用凯撒密码和非对称加密的方式提高数据传输安全性
+
+<br>

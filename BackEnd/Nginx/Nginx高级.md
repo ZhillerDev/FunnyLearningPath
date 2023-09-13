@@ -58,9 +58,14 @@ upstream name{
 
 <br>
 
-sticky 模块保持
+`sticky` 模块保持
 
-使用 yum 下载第三方模块 sticky，利用它生成具有一定生命周期的 cookie 下发给客户端，客户端再携带此 cookie 请求 nginx
+sticky 实现上游集群服务器会话保持（专业术语牢牢记住哈）的流程：
+
+1. 客户端首次请求 nginx，不带 cookie，nginx 轮询方式随机分配一个后端服务器
+2. 后端服务器处理请求，返回给 nginx
+3. nginx 封装与后端服务器对应的 cookie 字段返回给客户端（使用 sticky 插件）
+4. 客户端接收并保存 cookie 字段，下次请求直接携带
 
 ```conf
 upstream name{

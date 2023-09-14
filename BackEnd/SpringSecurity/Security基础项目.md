@@ -814,3 +814,149 @@ spring:
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
 ```
+
+<br>
+
+### 认证主体业务
+
+#### 配置 mybatisplus
+
+为 User 创建 mapper
+
+代码清单：`/mapper/UserMapper.java`
+
+```java
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.zhiller.sangengsecurity.domain.User;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface UserMapper extends BaseMapper<User> {
+}
+```
+
+在入口类中对该 mapper 执行扫描
+
+```java
+@SpringBootApplication
+@MapperScan("com.zhiller.sangengsecurity.mapper")
+public class SanGengSecurityApplication {
+
+    public static void main(String[] args) {
+        ConfigurableApplicationContext run = SpringApplication.run(SanGengSecurityApplication.class, args);
+
+    }
+}
+```
+
+<br>
+
+#### UserDetailsServiceImpl
+
+该实现类实现了 `UserDetailsService` ，通过条件查询从 mysql 中找到对应用户  
+如果用户不存在，抛出异常  
+如果用户存在，返回一个 UserDetails 对象
+
+代码清单：`/service/UserDetailsServiceImpl.java`
+
+```java
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.zhiller.sangengsecurity.domain.LoginUser;
+import com.zhiller.sangengsecurity.domain.User;
+import com.zhiller.sangengsecurity.mapper.UserMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.Collection;
+import java.util.Objects;
+
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService {
+    @Autowired
+    private UserMapper userMapper;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        //根据用户名查询用户信息
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getUserName,username);
+        User user = userMapper.selectOne(wrapper);
+        //如果查询不到数据就通过抛出异常来给出提示
+        if(Objects.isNull(user)){
+            throw new RuntimeException("用户名或密码错误");
+        }
+        //TODO 根据用户查询权限信息 添加到LoginUser中
+
+        //封装成UserDetails对象返回
+        return new LoginUser(user);
+    }
+}
+```
+
+<br>
+
+#### LoginUser
+
+该实体类继承了 `UserDetails`
+
+`@AllArgsConstructor` 注解可以自动生成带参数的构造函数，因为我们已经在该类中设置了私有变量 User，所以生成的构造函数就会自带形参 user，然后对应 UserDetailsServiceImpl 中的末尾返回的就是一个 UserDetials 对象
+
+默认的 LoginUser 对象仅需要两个参数：userid 和 password
+
+代码清单：`/domain/LoginUser.java`
+
+```java
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginUser implements UserDetails {
+    private User user;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+    }
+
+    @Override
+    public String getPassword() {
+        return user.getPassword();
+    }
+
+    @Override
+    public String getUsername() {
+        return user.getUserName();
+    }
+
+
+    // 下面的这四个玩意必须设置成true，否则不给你验证！！！
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+}
+```
+
+<br>

@@ -826,10 +826,6 @@ spring:
 代码清单：`/mapper/UserMapper.java`
 
 ```java
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.zhiller.sangengsecurity.domain.User;
-import org.apache.ibatis.annotations.Mapper;
-
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 }
@@ -860,19 +856,6 @@ public class SanGengSecurityApplication {
 代码清单：`/service/UserDetailsServiceImpl.java`
 
 ```java
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.zhiller.sangengsecurity.domain.LoginUser;
-import com.zhiller.sangengsecurity.domain.User;
-import com.zhiller.sangengsecurity.mapper.UserMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.Objects;
-
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
@@ -909,14 +892,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 代码清单：`/domain/LoginUser.java`
 
 ```java
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -960,3 +935,655 @@ public class LoginUser implements UserDetails {
 ```
 
 <br>
+
+#### LoginService
+
+设置登录服务接口
+
+代码清单：`/service/LoginService.java`
+
+```java
+public interface LoginService {
+    ResponseResult login(User user);
+
+    ResponseResult logout();
+}
+```
+
+<br>
+
+#### LoginServiceImpl
+
+实现登录与登出服务
+
+由于内容过多，具体代码功能查看下方注释，十分详细
+
+代码清单：`/service/LoginServiceImpl.java`
+
+```java
+@Service
+public class LoginServiceImpl implements LoginService {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private RedisCache redisCache;
+
+    @Override
+    public ResponseResult login(User user) {
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUserName(),user.getPassword());
+
+        // AuthenticationManager对象，用于处理认证操作
+        // authenticate()方法会触发Spring Security进行认证，返回一个Authentication对象authenticate，表示认证成功
+        // 如果认证失败，即authenticate为null，则抛出RuntimeException异常
+        Authentication authenticate = authenticationManager.authenticate(authenticationToken);
+        if(Objects.isNull(authenticate)){
+            throw new RuntimeException("用户名或密码错误");
+        }
+
+        //使用userid生成token
+        LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
+        String userId = loginUser.getUser().getId().toString();
+        String jwt = JwtUtil.createJWT(userId);
+        //authenticate存入redis
+        redisCache.setCacheObject("login:"+userId,loginUser);
+        //把token响应给前端
+        HashMap<String,String> map = new HashMap<>();
+        map.put("token",jwt);
+        return new ResponseResult(200,"登陆成功",map);
+    }
+
+    @Override
+    public ResponseResult logout() {
+        // 通过SecurityContextHolder获取当前登录用户的认证信息Authentication
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // 认证信息中的主体对象转换为LoginUser对象
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userid = loginUser.getUser().getId();
+        // 删除redis数据库中的对应对象
+        redisCache.deleteObject("login:"+userid);
+        return new ResponseResult(200,"退出成功");
+    }
+}
+```
+
+<br>
+
+#### LoginController
+
+代码清单：`/controller/LoginController.java`
+
+```java
+@RestController
+public class LoginController {
+
+    @Autowired
+    private LoginService loginService;
+
+    @PostMapping("/user/login")
+    public ResponseResult login(@RequestBody User user) {
+        return loginService.login(user);
+    }
+
+    @RequestMapping("/user/logout")
+    public ResponseResult logout() {
+        return loginService.logout();
+    }
+}
+```
+
+#### JWT 过滤器
+
+配置 JWT 过滤器，实现用户 JWT 校验
+
+代码清单：`/filter/JwtAuthenticationTokenFilter.java`
+
+```java
+// 继承自OncePerRequestFilter，它是Spring提供的一个过滤器基类，确保每个请求只被过滤一次
+@Component
+public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private RedisCache redisCache;
+
+    // 实现了具体的过滤逻辑
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        //获取token
+        String token = request.getHeader("token");
+        if (!StringUtils.hasText(token)) {
+            //放行
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 解析token
+        // 因为JWT中的Subject存储的就是userid，JWT解析后可以取出来放入redis进行比对
+        String userid;
+        try {
+            Claims claims = JwtUtil.parseJWT(token);
+            userid = claims.getSubject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("token非法");
+        }
+
+        //从redis中获取用户信息
+        String redisKey = "login:" + userid;
+        LoginUser loginUser = redisCache.getCacheObject(redisKey);
+        if(Objects.isNull(loginUser)){
+            throw new RuntimeException("用户未登录");
+        }
+
+        // 存入SecurityContextHolder，便于后续logout方法直接从这里面取出当前登录的用户信息
+        //TODO 获取权限信息封装到Authentication中
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(loginUser,null,null);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+        //放行
+        filterChain.doFilter(request, response);
+    }
+}
+```
+
+<br>
+
+#### SecurityConfig
+
+配置 security 基本属性
+
+```java
+@Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    // security自带的BCryptPasswordEncoder来对用户密码进行加密
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    // 自动装配JWT过滤器
+    @Autowired
+    JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                //关闭csrf
+                .csrf().disable()
+                //不通过Session获取SecurityContext
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authorizeRequests()
+                // 对于登录接口 允许匿名访问
+                .antMatchers("/user/login").anonymous()
+                // 除上面外的所有请求全部需要鉴权认证
+                .anyRequest().authenticated();
+
+        //把token校验过滤器添加到过滤器链中
+        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+    }
+
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+}
+```
+
+<br>
+
+## 鉴权
+
+<br>
+
+### RBAC 模型
+
+![](./img/sb/s4.png)
+
+[参考 CSDN 文章](https://blog.csdn.net/m0_52462015/article/details/122224362)
+
+`RBAC（Role-Based Access Control）`，基于角色的访问控制，现在主流的权限管理系统的权限设计都是 RBAC 模型
+
+所谓的 RBAC 模型，可以理解为以下两层关系：
+
+1. 一个用户可以对应一个角色
+2. 一个角色对应多个权限
+
+为什么不直接让一个用户对应多个权限呢？因为这样子不方便管理，将用户对接角色的话，我们仅需修改用户的角色就可以达到控制用户权限的目的，直观便捷且易于解耦
+
+<br>
+
+`RBAC0 模型` 最简单的用户、角色、权限模型，也就是我们上面提到的用户、角色、权限三大关系之间的模型
+
+`RBAC1 模型` 提供角色继承机制，子角色可以继承父角色的所有权限（比如经理可以继承总经理权限，然后自己再删减对应权限）
+
+`RBAC2 模型` 增加了对角色的一些限制：角色互斥、基数约束、先决条件角色
+
+`RBAC3 模型` 称为统一模型，它包含了 RBAC1 和 RBAC2，利用传递性，也把 RBAC0 包括在内
+
+<br>
+
+### 前置准备
+
+建表语句
+
+创建完毕后自动出现 5 个表，分别是
+
+- sys_menu
+- sys_role
+- sys_role_menu
+- sys_user
+- sys_user_menu
+
+```sql
+CREATE DATABASE /*!32312 IF NOT EXISTS*/`sg_security` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;
+
+USE `sg_security`;
+
+/*Table structure for table `sys_menu` */
+
+DROP TABLE IF EXISTS `sys_menu`;
+
+CREATE TABLE `sys_menu` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `menu_name` varchar(64) NOT NULL DEFAULT 'NULL' COMMENT '菜单名',
+  `path` varchar(200) DEFAULT NULL COMMENT '路由地址',
+  `component` varchar(255) DEFAULT NULL COMMENT '组件路径',
+  `visible` char(1) DEFAULT '0' COMMENT '菜单状态（0显示 1隐藏）',
+  `status` char(1) DEFAULT '0' COMMENT '菜单状态（0正常 1停用）',
+  `perms` varchar(100) DEFAULT NULL COMMENT '权限标识',
+  `icon` varchar(100) DEFAULT '#' COMMENT '菜单图标',
+  `create_by` bigint(20) DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
+  `update_by` bigint(20) DEFAULT NULL,
+  `update_time` datetime DEFAULT NULL,
+  `del_flag` int(11) DEFAULT '0' COMMENT '是否删除（0未删除 1已删除）',
+  `remark` varchar(500) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='菜单表';
+
+/*Table structure for table `sys_role` */
+
+DROP TABLE IF EXISTS `sys_role`;
+
+CREATE TABLE `sys_role` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) DEFAULT NULL,
+  `role_key` varchar(100) DEFAULT NULL COMMENT '角色权限字符串',
+  `status` char(1) DEFAULT '0' COMMENT '角色状态（0正常 1停用）',
+  `del_flag` int(1) DEFAULT '0' COMMENT 'del_flag',
+  `create_by` bigint(200) DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
+  `update_by` bigint(200) DEFAULT NULL,
+  `update_time` datetime DEFAULT NULL,
+  `remark` varchar(500) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COMMENT='角色表';
+
+/*Table structure for table `sys_role_menu` */
+
+DROP TABLE IF EXISTS `sys_role_menu`;
+
+CREATE TABLE `sys_role_menu` (
+  `role_id` bigint(200) NOT NULL AUTO_INCREMENT COMMENT '角色ID',
+  `menu_id` bigint(200) NOT NULL DEFAULT '0' COMMENT '菜单id',
+  PRIMARY KEY (`role_id`,`menu_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+
+/*Table structure for table `sys_user` */
+
+DROP TABLE IF EXISTS `sys_user`;
+
+CREATE TABLE `sys_user` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_name` varchar(64) NOT NULL DEFAULT 'NULL' COMMENT '用户名',
+  `nick_name` varchar(64) NOT NULL DEFAULT 'NULL' COMMENT '昵称',
+  `password` varchar(64) NOT NULL DEFAULT 'NULL' COMMENT '密码',
+  `status` char(1) DEFAULT '0' COMMENT '账号状态（0正常 1停用）',
+  `email` varchar(64) DEFAULT NULL COMMENT '邮箱',
+  `phonenumber` varchar(32) DEFAULT NULL COMMENT '手机号',
+  `sex` char(1) DEFAULT NULL COMMENT '用户性别（0男，1女，2未知）',
+  `avatar` varchar(128) DEFAULT NULL COMMENT '头像',
+  `user_type` char(1) NOT NULL DEFAULT '1' COMMENT '用户类型（0管理员，1普通用户）',
+  `create_by` bigint(20) DEFAULT NULL COMMENT '创建人的用户id',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` bigint(20) DEFAULT NULL COMMENT '更新人',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `del_flag` int(11) DEFAULT '0' COMMENT '删除标志（0代表未删除，1代表已删除）',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+
+/*Table structure for table `sys_user_role` */
+
+DROP TABLE IF EXISTS `sys_user_role`;
+
+CREATE TABLE `sys_user_role` (
+  `user_id` bigint(200) NOT NULL AUTO_INCREMENT COMMENT '用户id',
+  `role_id` bigint(200) NOT NULL DEFAULT '0' COMMENT '角色id',
+  PRIMARY KEY (`user_id`,`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+```sql
+SELECT
+	DISTINCT m.`perms`
+FROM
+	sys_user_role ur
+	LEFT JOIN `sys_role` r ON ur.`role_id` = r.`id`
+	LEFT JOIN `sys_role_menu` rm ON ur.`role_id` = rm.`role_id`
+	LEFT JOIN `sys_menu` m ON m.`id` = rm.`menu_id`
+WHERE
+	user_id = 2
+	AND r.`status` = 0
+	AND m.`status` = 0
+```
+
+<br>
+
+创建 Menu 对应的实体类
+
+```java
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ * 菜单表(Menu)实体类
+ *
+ * @author makejava
+ * @since 2021-11-24 15:30:08
+ */
+@TableName(value="sys_menu")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class Menu implements Serializable {
+    private static final long serialVersionUID = -54979041104113736L;
+
+        @TableId
+    private Long id;
+    /**
+    * 菜单名
+    */
+    private String menuName;
+    /**
+    * 路由地址
+    */
+    private String path;
+    /**
+    * 组件路径
+    */
+    private String component;
+    /**
+    * 菜单状态（0显示 1隐藏）
+    */
+    private String visible;
+    /**
+    * 菜单状态（0正常 1停用）
+    */
+    private String status;
+    /**
+    * 权限标识
+    */
+    private String perms;
+    /**
+    * 菜单图标
+    */
+    private String icon;
+
+    private Long createBy;
+
+    private Date createTime;
+
+    private Long updateBy;
+
+    private Date updateTime;
+    /**
+    * 是否删除（0未删除 1已删除）
+    */
+    private Integer delFlag;
+    /**
+    * 备注
+    */
+    private String remark;
+}
+```
+
+### redis 实现角色权限获取
+
+基于前面链接 redis 的相关方法总结，这里就不过多阐述具体细节，只讲述最终可实现结果与部分易错带你
+
+创建 menu 实体类对应的 mapper，放在 mapper 文件夹下面
+
+```java
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.sangeng.domain.Menu;
+
+import java.util.List;
+
+
+public interface MenuMapper extends BaseMapper<Menu> {
+    List<String> selectPermsByUserId(Long id);
+}
+```
+
+<br>
+
+虽然我们用的是 mybatis-plus，但对于部分复杂查询语句，依然需要我们手动编写更为直观，所以在对应的 resource 文件夹下创建 mapper 文件夹，编写对应 DAO 的 mapper 文件
+
+代码清单：`/resource/mapper/MenuMapper.xml`
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sangeng.mapper.MenuMapper">
+
+
+    <select id="selectPermsByUserId" resultType="java.lang.String">
+        SELECT
+            DISTINCT m.`perms`
+        FROM
+            sys_user_role ur
+            LEFT JOIN `sys_role` r ON ur.`role_id` = r.`id`
+            LEFT JOIN `sys_role_menu` rm ON ur.`role_id` = rm.`role_id`
+            LEFT JOIN `sys_menu` m ON m.`id` = rm.`menu_id`
+        WHERE
+            user_id = #{userid}
+            AND r.`status` = 0
+            AND m.`status` = 0
+    </select>
+</mapper>
+```
+
+<br>
+
+`UserDetailsServiceImpl` 的修改实现
+
+```java
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private MenuMapper menuMapper;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getUserName,username);
+        User user = userMapper.selectOne(wrapper);
+        if(Objects.isNull(user)){
+            throw new RuntimeException("用户名或密码错误");
+        }
+
+        // 获取对应的permission
+        List<String> permissionKeyList =  menuMapper.selectPermsByUserId(user.getId());
+        // 将用户权限传递给loginuser对象中
+        return new LoginUser(user,permissionKeyList);
+    }
+}
+```
+
+<br>
+
+## 失败处理
+
+`SpringSecurity` 中，如果我们在认证或者授权的过程中出现了异常会被 `ExceptionTranslationFilter` 捕获到。在 `ExceptionTranslationFilter` 中会去判断是认证失败还是授权失败出现的异常。
+
+​ 如果是认证过程中出现的异常会被封装成 `AuthenticationException` 然后调用 `AuthenticationEntryPoint` 对象的方法去进行异常处理。
+
+​ 如果是授权过程中出现的异常会被封装成 `AccessDeniedException` 然后调用 `AccessDeniedHandler` 对象的方法去进行异常处理。
+
+> 说人话就是，先实现 AuthenticationEntryPoint，再实现 AccessDeniedHandler，最后在 SecurityConfig 里面使用 http 启用它们即可
+
+<br>
+
+编写完这两个异常处理类后，进入 SecurityConfig，接着激活他们
+
+```java
+// 别忘了先自动装配
+@Autowired
+private AuthenticationEntryPointImpl authenticationEntryPoint;
+@Autowired
+private AccessDeniedHandlerImpl accessDeniedHandler;
+
+
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    ...
+
+    // 注册两个异常捕获对象
+    http.exceptionHandling()
+            .authenticationEntryPoint(authenticationEntryPoint)
+            .accessDeniedHandler(accessDeniedHandler);
+}
+```
+
+<br>
+
+## 跨域 CROS
+
+> 浏览器出于安全的考虑，使用 XMLHttpRequest 对象发起 HTTP 请求时必须遵守同源策略，否则就是跨域的 HTTP 请求，默认情况下是被禁止的。  
+> 对于前后端分离项目，前端请求后端接口必定会出现跨域问题，需要对此进行特殊处理
+
+springsecurity 的跨域问题设置极其简单，只需要两步就可以完成
+
+新建配置类，注入配置，编辑跨域规则
+
+代码清单：`/config/CorsConfig.java`
+
+```java
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+      // 设置允许跨域的路径
+        registry.addMapping("/**")
+                // 设置允许跨域请求的域名
+                .allowedOriginPatterns("*")
+                // 是否允许cookie
+                .allowCredentials(true)
+                // 设置允许的请求方式
+                .allowedMethods("GET", "POST", "DELETE", "PUT")
+                // 设置允许的header属性
+                .allowedHeaders("*")
+                // 跨域允许时间
+                .maxAge(3600);
+    }
+}
+```
+
+<br>
+
+最后一步！直接在 SecurityConfig 里面开启跨域即可
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    ...
+
+    //允许跨域
+    http.cors();
+}
+```
+
+<br>
+
+## 额外问题
+
+<br>
+
+### 其他校验方式
+
+还记得我们之前在 controller 中设置的 `@PreAuthorize` 注解吗，当时采用的是 `hasAuthority` 方法来执行校验流程，而实际上还有另外三种校验方法供我们选择
+
+1. `hasAnyAuthority` 可以说是 hasAuthority 的升级版，他接受多个权限，只要用户具有其中的一个权限，那么就放行
+
+```java
+@PreAuthorize("hasAnyAuthority('admin','test','system:dept:list')")
+public String hello(){
+    return "hello";
+}
+```
+
+2. `hasRole` 检测用户角色是否符合对应值，特别注意，这里设置的值前面会自动拼接`ROLE_`前缀
+
+```java
+@PreAuthorize("hasRole('system:dept:list')")
+public String hello(){
+    return "hello";
+}
+```
+
+3. `hasAnyRole` 同理，多用户判断
+
+<br>
+
+### 自定义校验
+
+自定义组件 SGExpressionRoot，使用注解进行注入，这里要传入一个自定义的名称
+
+```java
+// 注入时传入自定义名称custom
+@Component("custom")
+public class SGExpressionRoot {
+
+    public boolean hasAuthority(String authority){
+        //获取当前用户的权限
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        List<String> permissions = loginUser.getPermissions();
+        //判断用户权限集合中是否存在authority
+        return permissions.contains(authority);
+    }
+}
+```
+
+接着就可以在 controller 里面调用自定义的校验方式
+
+```java
+@RequestMapping("/hello")
+@PreAuthorize("@ex.hasAuthority('system:dept:list')")
+public String hello(){
+    return "hello";
+}
+```
+
+<br>
+
+### 

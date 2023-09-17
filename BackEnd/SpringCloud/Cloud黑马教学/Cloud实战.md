@@ -351,11 +351,378 @@ spring:
 
 ![](../img/cloud-hm/h5.png)
 
-###
+### Nacos 集群
+
+![](../img/cloud-hm/h6.png)
+
+单个实例集中在一起构成一个集群
+
+集群通常用于容灾机制
+
+同一集群内的实例会先行访问当前集群内的其他本地实例，如果实在没办法才去找其他集群中的实例
+
+<br>
+
+为实例设置集群的方式很简单，只需要在配置文件添加下面的代码即可将其划入一个集群内
+
+```yaml
+spring:
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+
+      # 设置集群名称，将这个实例归为集群SH管理
+      discovery:
+        cluster-name: SH
+```
+
+<br>
+
+### Nacos 负载均衡
+
+假设现在有这样的状况：
+
+1. 服务提供方拥有 3 个实例，两个集群（BJ、NJ）
+2. 服务消费方只有 1 个实例，一个集群（BJ）
+
+可见消费方的集群和提供方中的一个集群是一致的，所以按照常理来说我们希望消费方直接从同一集群下的提供方拿取数据
+
+<br>
+
+但由于 nacos 默认采用轮询的方式实现负载均衡，此时必须修改默认配置才可以实现最终效果
+
+方案一：在 applcation.yaml 配置 ribbon，指定负载均衡采用的方法
+
+```yaml
+service-consumer:
+  ribbon:
+    NFLoadBalancerRuleClassName: com.alibaba.cloud.nacos.ribbon.NacosRule
+```
+
+方案二：在入口类中使用注入的方式来配置
+
+```java
+@Bean
+NacosRule nacosRule() {
+    return new NacosRule();
+}
+```
+
+<br>
+
+负载均衡权重值设定
+
+1. 实例权重为 0 时，他将永远不会被访问
+2. 权重值范围 0-1
+3. 同集群内的多个实例，权重高的被访问频率变高
+
+<br>
+
+### Nacos 环境隔离
+
+nacos 提供了环境隔离选项  
+从外到内，环境由大变小依次为：`命名空间->分组->服务->实例`
+
+我们先去 nacos 控制面板的“命名空间”模块随意添加一个名叫`dev`的命名空间，并复制一下自动生成的 ID
+
+找到任意一个服务器的配置文件，使用 namespace 字段来将这个服务器归为某个命名空间
+
+```yaml
+spring:
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      discovery:
+        cluster-name: BJ
+
+        # 设置改服务器所处的命名空间
+        # 这里需要填入我们之前记下来的命名空间ID
+        namespace: 1688ddc5-4f48-4bdc-bb5b-8c5363edf242
+```
+
+<br>
+
+配置完毕，重启服务器
+
+进入 nacos 控制台的 `服务管理->服务列表`  
+然后可以点击上方的导航条来切换命名空间
+
+下图我们切换到了新建的 dev 命名空间，可见我们配置的 user-server 已经归为此命名空间管辖
+
+![](../img/cloud-hm/h7.png)
+
+<br>
+
+### Nacos 注册细节
+
+![](../img/cloud-hm/h8.png)
+
+服务器提供者可以向注册中心注册时选择两种状态
+
+1. 临时实例状态
+2. 非临时实例状态
+
+临时实例需要主动向注册中心发送定时的心跳包来证明自己活着，否则超时了就会被注册中心剔除
+
+非临时实例无需主动发包，而是由注册中心确认其是否活着，他会一直留着而不会因为超时等情况自己删除
+
+> nacos 集群默认使用 AP 模式，当存在非临时实例时转用 CP 模式
+
+<br>
+
+配置文件内使用 `ephemeral` 字段来标记该服务器是否为临时实例
+
+```yaml
+spring:
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      discovery:
+        cluster-name: BJ
+        namespace: 1688ddc5-4f48-4bdc-bb5b-8c5363edf242
+
+        # 设置是否为临时实例
+        ephemeral: false
+```
+
+<br>
+
+### Nacos 更多配置项
+
+#### 快速上手
+
+> nacos 提供了云端设置配置文件，我们只需要在 nacos 中新建配置文件并写入需要执行热更新的配置项，然后再 springboot 应用的 bootstrap.yaml 内调用该配置即可，
+
+新建配置文件，配置文件 ID 书写格式为：`<服务器名>-<类型>.yaml`  
+目前配置文件支持 yaml 和 properties 格式
+
+这里的“服务器名”一定要和 springboot 中的 application 定义的 name 完全一致，才可以启用该配置项
+
+![](../img/cloud-hm/h9.png)
+
+<br>
+
+为 user-server 添加 nacos-config 依赖，以便开启依赖项
+
+```xml
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+```
+
+添加 nacos-config 后，在 resource 文件夹下新建配置文件 `bootstrap.yaml` ，此时当 springboot 启动时，首先读取该配置文件，之后才读取 `application.yaml`
+
+```yaml
+spring:
+  # 服务器名称
+  application:
+    name: userservice
+  # 服务器类型（我们之前定义为dev，这里必须写dev）
+  profiles:
+    active: dev
+
+  # 其他关键性配置
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      config:
+        # 设置bootstrap配置文件的后缀名
+        file-extension: yaml
+      discovery:
+        cluster-name: BJ
+        namespace: 1688ddc5-4f48-4bdc-bb5b-8c5363edf242
+        ephemeral: false
+```
+
+<br>
+
+之后来到 `UserController.java` 拉取配置文件信息
+
+```java
+@Slf4j
+@RestController
+@RequestMapping("/user")
+public class UserController {
+
+    @Value("${pattern.dataformat}")
+    private String dataFormat;
+
+    @GetMapping("/now")
+    public String now() {
+        // 由于我们之前在nacos中设置的配置项配置了pattern属性，这里就可以直接调用对应的属性完成时间格式化了
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern(dataFormat));
+    }
+}
+```
+
+<br>
+
+#### 自动更新
+
+直接在 nacos 中使用配置文件的好处是可以实时实现热更新，而不像是在项目中设置 `application.yaml` 后还要在重启一次
+
+我们仅需在使用了 nacos 配置文件的 bean 内添加注解 `@RefreshScope` 即可
+
+```java
+@Slf4j
+@RestController
+@RequestMapping("/user")
+@RefreshScope // 添加检测配置文件更新的注解
+public class UserController {}
+```
+
+<br>
+
+或者你可以创建一个自定义的配置类还动态获取指定配置
+
+```java
+@Component
+@Data
+@ConfigurationProperties(prefix = "pattern")
+public class PatternProperties {
+    private String dataFormat;
+}
+```
+
+<br>
+
+我们可以专门配置指定运行环境（比如 dev）的配置文件：`userservice-dev.yaml`  
+或者定义服务器全局（所有环境通用）的配置文件：`userservice.yaml`
+
+配置文件之间的优先级：带环境参数的配置文件>全局配置文件>application.yaml
 
 <br>
 
 ## Feign
+
+### 取代 RestTemplate
+
+相比于 resttemplate 低效的字符串拼接，feign 提供了接口操作的形式，让我们更加直观的连接到对应的服务器提供者
+
+首先引入依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+```
+
+务必记住在入口类中开启 feign 客户端
+
+```java
+@MapperScan("cn.itcast.order.mapper")
+@SpringBootApplication
+@EnableFeignClients // 开启feign客户端
+public class OrderApplication {}
+```
+
+<br>
+
+创建一个接口类，用于获取服务器提供者的接口
+
+代码清单：`clients/UserClient.java`
+
+```java
+// 注解内填入需要链接到的服务器名称
+@FeignClient("userservice")
+public interface UserClient {
+    // 表示使用GET请求获取数据
+    @GetMapping("/user/{id}")
+    // 同理PathVariable用来填补上方路径中的id占位符
+    User findById(@PathVariable("id") Long id);
+}
+```
+
+最终在 service 重写查询逻辑
+
+```java
+@Service
+public class OrderService {
+
+    @Autowired
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private UserClient userClient;
+
+    public Order queryOrderById(Long orderId) {
+        // 查询订单
+        Order order = orderMapper.findById(orderId);
+        // feign客户端请求user数据库中内容
+        User user = userClient.findById(order.getUserId());
+        order.setUser(user);
+        return order;
+    }
+}
+```
+
+> 运行 orderservice 之后，浏览器输入 `http://localhost:10087/order/101` 即可获取对应的数据了！实际上你看出来的效果和 resttemplate 差不多
+
+<br>
+
+### Feign 自定义配置
+
+配置日志输出级别
+
+全局配置
+
+```yaml
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: FULL
+```
+
+局部配置（明确指出服务器名称）
+
+```yaml
+feign:
+  client:
+    config:
+      userservice:
+        loggerLevel: FULL
+```
+
+<br>
+
+或者你可以使用代码的方式来书写
+
+![](../img/cloud-hm/h10.png)
+
+<br>
+
+### 性能优化
+
+借助 URLConnection 连接池来取代原本的单链接，可以提升 feign 客户端的效率
+
+导入 feign-httpclient 坐标
+
+```xml
+<dependency>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>feign-httpclient</artifactId>
+</dependency>
+```
+
+之后配置文件配置好属性即可
+
+```yaml
+feign:
+  client:
+    config:
+      default:
+        # 日志级别最好使用BASIC或者NONE，其他的级别比较耗费性能而且基本用不上
+        loggerLevel: BASIC
+  httpclient:
+    enabled: true
+    max-connections: 200
+    max-connections-per-route: 50
+```
+
+<br>
 
 ## Gateway
 

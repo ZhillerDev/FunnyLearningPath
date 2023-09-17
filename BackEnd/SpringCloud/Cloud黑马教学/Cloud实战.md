@@ -726,4 +726,227 @@ feign:
 
 ## Gateway
 
-## Docker
+### WebFlux
+
+> gateway 基于 webflux 构建
+
+WebFlux 是基于反应式流概念的响应式编程框架，用于构建异步非阻塞的 Web 应用程序。它支持响应式编程范式，并提供了一种响应式的方式来处理 Web 请求。
+
+与传统的 Servlet API 相比，WebFlux 采用了基于事件驱动的编程模型，不依赖于传统的线程池模型。它使用少量的线程来处理大量的请求，通过异步非阻塞的方式实现高吞吐量和低延迟。
+
+<br>
+
+WebFlux 提供了两种编程模型：
+
+1. 响应式 Web 客户端：用于发送 HTTP 请求并处理响应。它基于 Reactor 提供了一组操作符和方法，可以以声明式的方式组装和处理 HTTP 请求，支持异步和流式处理。
+2. 响应式 Web 服务器：提供了一个响应式的 Web 服务器，用于处理传入的 HTTP 请求并生成响应。它基于 Reactor 提供了一组用于处理请求和生成响应的 API，支持异步非阻塞的处理方式。可以使用注解或函数式编程的方式定义请求处理器，处理器可以返回一个单独的响应，也可以返回一个表示响应流的 Publisher 对象。
+
+<br>
+
+### 网关基本配置
+
+> Gateway 是一个在系统架构中充当入口点的服务器，它接收来自客户端的请求并将其转发到后端的服务。网关的作用是在客户端和后端服务之间建立一个中间层，用于路由请求等
+
+新建 maven 项目 gateway
+
+pom 添加 gateway 坐标以及负载均衡坐标
+
+```xml
+<!--gateway网关依赖-->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-gateway</artifactId>
+</dependency>
+
+<!--loadbalancer负载均衡，对于高版本springboot需要额外添加此以来-->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+</dependency>
+```
+
+编写入口文件 `GatewayApplication.java`
+
+```java
+@SpringBootApplication
+public class GatewayApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(GatewayApplication.class, args);
+    }
+}
+```
+
+进行网关配置
+
+routes 用于设置转发路由，他是一个数组，表示你可以设置多个转发规则，但是各个转发规则的 id 不可以重复
+
+```yaml
+server:
+  port: 2333
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+
+    # 配置gateway
+    gateway:
+      # 数组方式配置路由转发
+      routes:
+        # 转发id，名字随便取，但是不可以重复
+        - id: user-service
+          # 被转发的URI，格式：lb://<被转发的服务器名>
+          uri: lb://userservice
+          # 断言规则
+          predicates:
+            # 当请求路径是 /user/** 格式的，自动转发到指定服务器
+            - Path=/user/**
+        # 这是另一组被转发的服务器
+        - id: order-service
+          uri: lb://orderservice
+          predicates:
+            - Path=/order/**
+```
+
+<br>
+
+### 过滤器与断言工厂
+
+predicates 断言配置属性可以使用以下 11 种
+![](../img/cloud-hm/h11.png)
+
+<br>
+
+使用 filters 添加过滤器
+
+下面为每个 user 请求都添加了一个名为“Truth”的请求头
+
+```yaml
+gateway:
+  routes:
+    - id: user-service
+      uri: lb://userservice
+      predicates:
+        - Path=/user/**
+
+      # 设置过滤器
+      filters:
+        # 添加请求头，格式：[请求头名称],[请求头内容]
+        - AddRequestHeader=Truth,shit oh my gods!
+```
+
+如果你想一劳永逸的话，可以使用 defaultFilters 为全部路由设置请求头
+
+```yaml
+gateway:
+  routes:
+    - id: user-service
+      uri: lb://userservice
+      predicates:
+        - Path=/user/**
+    - id: order-service
+      uri: lb://orderservice
+      predicates:
+        - Path=/order/**
+
+  # 默认所有路由都有此路由器
+  default-filters:
+    - AddRequestHeader=Truth,shit oh my gods!
+```
+
+<br>
+
+### 全局过滤器
+
+全局过滤器对所有路由转发同时生效
+
+实现该过滤器需要两步：
+
+1. 实现 `GlobalFilter`
+2. 借助注解 `@Order` 设置过滤器优先级
+
+```java
+// order设置-1表示最高优先级
+@Order(-1)
+@Component
+public class AuthFilter implements GlobalFilter {
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        // 取出参数并对参数进行校验
+        ServerHttpRequest request = exchange.getRequest();
+        MultiValueMap<String, String> params = request.getQueryParams();
+        String auth = params.getFirst("authorization");
+
+        // 检查授权参数是否为 "admin"
+        if ("admin".equals(auth)) {
+            // 授权通过，继续传递请求到下一个过滤器或后端服务
+            return chain.filter(exchange);
+        }
+
+        // 授权失败，设置响应状态为 401 未授权
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+
+        // 设置响应为完成状态，结束请求-响应的处理
+        return exchange.getResponse().setComplete();
+    }
+}
+```
+
+<br>
+
+三大过滤器：路由过滤器、defaultFilter、GlobalFilter 执行优先级以及顺序
+
+![](../img/cloud-hm/h12.png)
+
+<br>
+
+### 跨域处理 CORS
+
+![](../img/cloud-hm/h13.png)
+
+<br>
+
+## RabbitMQ
+
+### 安装 rabbitmq
+
+首先确保自己已经安装好了 docker
+
+是 docker 拉取镜像文件：`docker pull rabbitmq:3-management`
+
+拉取完毕，打开容器
+
+```sh
+docker run \
+ -e RABBITMQ_DEFAULT_USER=itcast \
+ -e RABBITMQ_DEFAULT_PASS=123321 \
+ --name mq \
+ --hostname mq1 \
+ -p 15672:15672 \
+ -p 5672:5672 \
+ -d \
+ rabbitmq:3-management
+```
+
+<br>
+
+浏览器访问虚拟机的 15672 端口，即可看见 rabbitmq 管理界面
+
+![](../img/cloud-hm/h14.png)
+
+我们可以在 admin 选项卡内添加新的用户
+
+其中的`can access virtual hosts`表示当前用户对应的虚拟主机  
+建议不同用户对应不同的虚拟主机，可以实现隔离效果
+
+虚拟主机可以点击上图右侧的 `virtual hosts` 按钮新建
+
+<br>
+
+### SpringAMQP 基础队列
+
+由于使用官方原生操作 rabbitmq 的方式太过生草，代码巨多，不适合日常开发，推荐改用 SpringAMQP 来简化操作
+
+

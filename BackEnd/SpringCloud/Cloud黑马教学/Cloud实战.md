@@ -1,5 +1,7 @@
 ## 远程服务调用
 
+<br>
+
 ### RestTemplate
 
 RestTemplate 可以模拟客户端来向另外一个后端执行请求
@@ -64,6 +66,8 @@ public class OrderService {
 <br>
 
 ## Eureka
+
+<br>
 
 ### 简要概念
 
@@ -222,6 +226,8 @@ String url = "http://user-server/user/" + order.getUserId();
 
 ## Ribbon
 
+<br>
+
 ### 工作流程
 
 ![](../img/cloud-hm/h3.png)
@@ -282,9 +288,9 @@ ribbon:
 
 <br>
 
-###
-
 ## Nacos
+
+<br>
 
 ### 下载 Nacos 并运行
 
@@ -596,6 +602,8 @@ public class PatternProperties {
 
 ## Feign
 
+<br>
+
 ### 取代 RestTemplate
 
 相比于 resttemplate 低效的字符串拼接，feign 提供了接口操作的形式，让我们更加直观的连接到对应的服务器提供者
@@ -725,6 +733,8 @@ feign:
 <br>
 
 ## Gateway
+
+<br>
 
 ### WebFlux
 
@@ -909,6 +919,8 @@ public class AuthFilter implements GlobalFilter {
 <br>
 
 ## RabbitMQ
+
+<br>
 
 ### 安装 rabbitmq
 
@@ -1731,3 +1743,156 @@ void testBulkIndex() throws IOException {
     client.bulk(request, RequestOptions.DEFAULT);
 }
 ```
+
+## DSL
+
+<br>
+
+### 全文查询
+
+查询索引 hotel 下的所有内容
+
+`match_all` 查询全部内容
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
+`multi_match` 查询方式：在指定的 fields 查询 query 的内容
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "酒店",
+      "fields": ["brand","name"]
+    }
+  }
+}
+```
+
+<br>
+
+### 精确查询
+
+term 匹配（精确匹配）：根据字段名称来精确查找指定内容，只要 value 的值有一丝不符合就查询不到
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "term": {
+      // 字段名称
+      "brand": {
+        // 字段内容
+        "value": "华美达"
+      }
+    }
+  }
+}
+```
+
+range 查询（范围模糊查询）
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "range": {
+      // 字段名称
+      "price": {
+        "gte": 100, // gte大于且等于
+        "lte": 300  // lte小于且等于
+      }
+    }
+  }
+}
+```
+
+<br>
+
+### 其余查询方法
+
+`FunctionScoreQuery` 方法分数加权查询  
+可以将其看成一个带权重的查询方式
+
+下方查询使用了 function_score 查询，它包含两个组成部分：
+
+1. query：这里使用了标准的匹配查询，查询字段 name 下内容为“外滩”的项目
+2. functions：加权方法，下方加了一个过滤器 filter，表示当精准匹配到字段 brand 下的“如家”时，为此平分乘以权重值 weight
+
+被加权的字段会在查询结果中排列靠前，故此方法可以灵活调整查询结果
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "name": "外滩"
+        }
+      },
+      "functions": [
+        {
+          "filter": {
+            "term": {
+              "brand": "如家"
+            }
+          },
+          "weight": 10
+        }
+      ]
+    }
+  }
+}
+```
+
+<br>
+
+`BooleanQuery` 布尔查询
+
+布尔查询包含四个组合：
+
+- must 必须匹配的查询
+- should 选择性匹配的查询
+- must_not 必须不匹配
+- filter 必须匹配，但是不参与几计分
+
+案例示范：查询字段 name 必须为为如家且价格必须不大于 400 元的记录
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "name": "如家"
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "range": {
+            "price": {
+              "gt": 400
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+<br>
+
+### 搜索结果

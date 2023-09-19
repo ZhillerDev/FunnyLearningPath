@@ -1337,3 +1337,397 @@ POST _analyze
 <br>
 
 ### 操作索引
+
+创建一个简单的索引只需要按照以下的代码进行简要修改即可
+
+```json
+PUT /heima
+{
+  "mappings": {
+    "properties": {
+      "info":{                            // 设置字段名为"info"的映射
+        "type": "text",                   // 设置字段类型为"text"
+        "analyzer": "ik_smart"            // 使用中文分词器"ik_smart"进行分词
+      },
+      "email":{                           // 设置字段名为"email"的映射
+        "type": "keyword",                 // 设置字段类型为"keyword"，表示不会进行分词
+        "index": false                     // 设置不对该字段进行索引，即无法通过该字段进行搜索
+      },
+      "name":{                            // 设置字段名为"name"的映射
+        "type": "object",                  // 设置字段类型为"object"，表示是一个嵌套对象
+        "properties": {                    // 定义嵌套对象的属性
+          "firstname":{                    // 设置嵌套对象的属性名为"firstname"的映射
+            "type":"keyword"                // 设置属性类型为"keyword"，表示不会进行分词
+          },
+          "lastname":{                     // 设置嵌套对象的属性名为"lastname"的映射
+            "type":"keyword"                // 设置属性类型为"keyword"，表示不会进行分词
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+在 dev tools 中执行完毕后的结果是
+
+```json
+{
+	"acknowledged": true,
+	"shards_acknowledged": true,
+	"index": "heima"
+}
+```
+
+<br>
+
+### 索引与文档操作
+
+> es 中索引库和 mapping 一旦创建后就无法修改，但是可以向其中添加新的字段
+
+如下指令，向索引 heima 添加了一个新的字段叫做 age
+
+```json
+PUT /heima/_mapping
+{
+  "properties":{
+    "age":{
+      "type":"keyword"
+    }
+  }
+}
+```
+
+获取索引库：`GET /索引库名称`  
+删除索引库：`DELETE /索引库名称`
+
+<br>
+
+## RestClient
+
+<br>
+
+### 定义索引
+
+引入对应 sql 后，需要添加 sql 对应的 es 索引
+
+下面是根据 sql 结构来构建的索引树，我们需要插入到 es 里面，在这里先不要在 devtools 中实现，下一节我们将会使用 restclient 来插入这个索引
+
+```json
+PUT /hotel
+{
+  "mappings": {
+    "properties": {
+      "id":{
+        "type": "keyword"
+      },
+      "name":{
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "copy_to": "all"
+      },
+      "address":{
+        "type": "keyword",
+        "index": false
+      },
+      "price":{
+        "type": "integer"
+      },
+      "score":{
+        "type": "integer"
+      },
+      "brand":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "city":{
+        "type": "keyword"
+      },
+      "starName":{
+        "type": "keyword"
+      },
+      "business":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "location":{
+        "type": "geo_point"
+      },
+      "pic":{
+        "type": "keyword",
+        "index": false
+      },
+      "all":{
+        "type": "text",
+        "analyzer": "ik_max_word"
+      }
+    }
+  }
+}
+```
+
+`copy_to` 字段的作用是将当前字段附加到另外一个字段内，当搜索时就会联合被附加的字段一起搜索
+
+比如上面将 business、brand 和 name 均附加到了 all 字段上，而被附加的 all 并不会额外添加内容，只是被搜索时他们三个会同时被检索，提高效率，仅此而已
+
+<br>
+
+### 安装与配置测试类
+
+pom 内添加 es 依赖项，这里先略去版本
+
+```xml
+<dependency>
+    <groupId>org.elasticsearch.client</groupId>
+    <artifactId>elasticsearch-rest-high-level-client</artifactId>
+</dependency>
+```
+
+然后到 properties 标签内添加 es 的版本，注意这里的版号一定要和你使用的 es 版本严格相等！  
+比如我这边用的是 es7.8.0，就必须是这个版本！
+
+```xml
+<properties>
+    <java.version>1.8</java.version>
+    <elasticsearch.version>7.8.0</elasticsearch.version>
+</properties>
+```
+
+<br>
+
+新建一个测试类，使用注解 `@BeforeEach` 和 `@AfterEach` 来实现 `restclient` 链接与关闭的两大事务
+
+```java
+@SpringBootTest
+public class HotelIndexTest {
+    private RestHighLevelClient client;
+
+    @BeforeEach
+    void setup() {
+        this.client = new RestHighLevelClient(RestClient.builder(
+                HttpHost.create("http://localhost:9200")
+        ));
+    }
+
+    @AfterEach
+    void destory() throws IOException {
+        client.close();
+    }
+}
+```
+
+<br>
+
+### 插入索引
+
+首先新建一个常量类，把插入索引的 json 保存到里面去
+
+这段文本就是上上一节定义的插入索引 json
+
+```java
+package cn.itcast.hotel.constant;
+
+public class HotelConst {
+    public static final String HOTEL_INDEX = "{\n" +
+            "  \"mappings\": {\n" +
+            "    \"properties\": {\n" +
+            "      \"id\":{\n" +
+            "        \"type\": \"keyword\"\n" +
+            "      },\n" +
+            "      \"name\":{\n" +
+            "        \"type\": \"text\",\n" +
+            "        \"analyzer\": \"ik_max_word\",\n" +
+            "        \"copy_to\": \"all\"\n" +
+            "      },\n" +
+            "      \"address\":{\n" +
+            "        \"type\": \"keyword\",\n" +
+            "        \"index\": false\n" +
+            "      },\n" +
+            "      \"price\":{\n" +
+            "        \"type\": \"integer\"\n" +
+            "      },\n" +
+            "      \"score\":{\n" +
+            "        \"type\": \"integer\"\n" +
+            "      },\n" +
+            "      \"brand\":{\n" +
+            "        \"type\": \"keyword\",\n" +
+            "        \"copy_to\": \"all\"\n" +
+            "      },\n" +
+            "      \"city\":{\n" +
+            "        \"type\": \"keyword\"\n" +
+            "      },\n" +
+            "      \"starName\":{\n" +
+            "        \"type\": \"keyword\"\n" +
+            "      },\n" +
+            "      \"business\":{\n" +
+            "        \"type\": \"keyword\",\n" +
+            "        \"copy_to\": \"all\"\n" +
+            "      },\n" +
+            "      \"location\":{\n" +
+            "        \"type\": \"geo_point\"\n" +
+            "      },\n" +
+            "      \"pic\":{\n" +
+            "        \"type\": \"keyword\",\n" +
+            "        \"index\": false\n" +
+            "      },\n" +
+            "      \"all\":{\n" +
+            "        \"type\": \"text\",\n" +
+            "        \"analyzer\": \"ik_max_word\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+}
+```
+
+紧接着在测试类中编写插入 index 的方法即可
+
+```java
+@Test
+void testCreateIndex() throws IOException {
+    // 创建索引请求
+    CreateIndexRequest request = new CreateIndexRequest("hotel");
+    // 设置索引的源数据
+    request.source(HotelConst.HOTEL_INDEX, XContentType.JSON);
+    // 使用客户端执行创建索引请求
+    client.indices().create(request, RequestOptions.DEFAULT);
+}
+```
+
+<br>
+
+你可以使用以下两个测试方法来实现删除索引以及判断对应索引存在与否
+
+```java
+// 删除索引
+@Test
+void testDeleteIndex() throws IOException {
+    DeleteIndexRequest request = new DeleteIndexRequest("hotel");
+    client.indices().delete(request, RequestOptions.DEFAULT);
+}
+
+// 通过get索引,判断get请求的返回值来看索引是否已经创建
+@Test
+void testExistIndex() throws IOException {
+    GetIndexRequest request = new GetIndexRequest("hotel");
+    boolean exists = client.indices().exists(request, RequestOptions.DEFAULT);
+    System.out.println(exists);
+}
+```
+
+<br>
+
+### 索引的 CRUD
+
+创建索引
+
+首先引入 `IHotelService` 用来通过 id 查询 mysql 对应记录  
+然后通过 `JSON.toJSONString` 把对应的实体类转换为 JSON 字符串的格式用来创建索引
+
+```java
+@SpringBootTest
+public class ElasticSearchCRUDTest {
+  @Autowired
+  private IHotelService hotelService;
+  private RestHighLevelClient client;
+
+  @Test
+  void testIndexDoc() throws IOException {
+    Hotel hotelServiceById = hotelService.getById(61083L);
+    HotelDoc hotelDoc = new HotelDoc(hotelServiceById);
+
+    IndexRequest request = new IndexRequest("hotel").id(hotelServiceById.getId().toString());
+    request.source(JSON.toJSONString(hotelDoc), XContentType.JSON);
+    client.index(request, RequestOptions.DEFAULT);
+  }
+}
+```
+
+<br>
+
+根据指定 id 获取索引存储 JSON，并将其转换为实体类后输出
+
+```java
+@Test
+void testGetDoc() throws IOException{
+    GetRequest request= new GetRequest("hotel","61083");
+    GetResponse response = client.get(request, RequestOptions.DEFAULT);
+    String source = response.getSourceAsString();
+    HotelDoc hotelDoc = JSON.parseObject(source, HotelDoc.class);
+    System.out.println(hotelDoc);
+}
+```
+
+<br>
+
+更新字段
+
+字段更新有两种方式
+
+- 全量更新：删掉旧的，新建一个新的插进去
+- 局部更新：在原来的基础上更新需要的内容
+
+下面展示了局部更新的方法
+
+```java
+@Test
+void testUpdateDoc() throws IOException {
+    UpdateRequest request = new UpdateRequest("hotel", "61083");
+    request.doc(
+            "price", "2103",
+            "starName", "星钻"
+    );
+    client.update(request, RequestOptions.DEFAULT);
+}
+```
+
+<br>
+
+删除文档就更简单了，直接提供索引以及对应的 id 就好了
+
+```java
+@Test
+void testDeleteDoc() throws IOException{
+    DeleteRequest request = new DeleteRequest("hotel", "61083");
+    client.delete(request, RequestOptions.DEFAULT);
+}
+```
+
+<br>
+
+### 批量导入文档
+
+使用 bulk 请求来实现批量索引查询
+
+```java
+@Test
+void testBulkImport() throws IOException {
+    BulkRequest request = new BulkRequest();
+    request.add(new IndexRequest("hotel").id("61083").source("json", XContentType.JSON));
+    request.add(new IndexRequest("hotel").id("61083").source("json", XContentType.JSON));
+    request.add(new IndexRequest("hotel").id("61083").source("json", XContentType.JSON));
+    client.bulk(request, RequestOptions.DEFAULT);
+}
+```
+
+<br>
+
+查询所有酒店后使用 bulk 将他们依次插入索引
+
+```java
+@Test
+void testBulkIndex() throws IOException {
+    List<Hotel> list = hotelService.list();
+
+    BulkRequest request = new BulkRequest();
+    for (Hotel hotel : list) {
+        HotelDoc hotelDoc = new HotelDoc(hotel);
+        request.add(
+                new IndexRequest("hotel")
+                        .id(hotelDoc.getId().toString())
+                        .source(JSON.toJSONString(hotelDoc), XContentType.JSON)
+        );
+    }
+    client.bulk(request, RequestOptions.DEFAULT);
+}
+```

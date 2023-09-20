@@ -1970,3 +1970,200 @@ GET /hotel/_search
 <br>
 
 ### 用 RestClient 实现 DSL
+
+matchAll
+
+`SearchRequest` 执行搜索匹配请求，使用 source 规定搜索方法
+
+`SearchHits` 获取所有命中的文档  
+`SearchHit[]` 将每个文档化为单个 hit 后存储到该数组内部  
+`SearchHit` 最后对数组 foreach，得到单个 hit 对象，使用字符串转换方法显示 json 给客户
+
+```java
+@Test
+void testAll() throws IOException {
+    SearchRequest request = new SearchRequest("hotel");
+    request.source().query(QueryBuilders.matchAllQuery());
+    SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+
+    SearchHits hits = response.getHits();
+    long total = hits.getTotalHits().value;
+
+    SearchHit[] searchHits = hits.getHits();
+    for (SearchHit hit : searchHits) {
+        String sourceAsString = hit.getSourceAsString();
+        System.out.println(sourceAsString);
+    }
+}
+```
+
+全文检索
+
+指定单个或者多个字段进行查询，使用 `QueryBuilders.matchQuery`
+
+```java
+SearchRequest request = new SearchRequest("hotel");
+request.source().query(QueryBuilders.matchQuery("all","如家"));
+```
+
+布尔查询
+
+通过构建一个 `BoolQueryBuilder` ，将其作为查询参数放到 request 里面，然后执行查询
+
+```java
+@Test
+void testBooleanMatch() throws IOException {
+    SearchRequest request = new SearchRequest("hotel");
+    BoolQueryBuilder builder = QueryBuilders.boolQuery();
+    builder.must(QueryBuilders.termQuery("city", "杭州"));
+    builder.filter(QueryBuilders.rangeQuery("price").lte(250));
+    request.source().query(builder);
+    SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+
+    for (SearchHit hit : response.getHits().getHits()) System.out.println(hit.getSourceAsString());
+}
+```
+
+分页查询
+
+```java
+@Test
+void testPage() throws IOException {
+    SearchRequest request = new SearchRequest("hotel");
+    request.source().query(QueryBuilders.matchAllQuery());
+    request.source().from(0).size(10);  // 指定从第几个文档开始查询，以及查询文档的数量
+    request.source().sort("price", SortOrder.ASC); // 根据price字段的升序排列
+
+    SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+    for (SearchHit hit : response.getHits().getHits()) System.out.println(hit.getSourceAsString());
+}
+```
+
+<br>
+
+高亮显示
+
+```java
+@Test
+void testHighLight() throws IOException {
+    SearchRequest request = new SearchRequest("hotel");
+    request.source().query(QueryBuilders.matchQuery("all", "如家"));
+    request.source().highlighter(new HighlightBuilder().field("name").requireFieldMatch(false));
+
+    SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+    for (SearchHit hit : response.getHits().getHits()) System.out.println(hit.getSourceAsString());
+}
+```
+
+<br>
+
+## 黑马旅游案例
+
+<br>
+
+### 分页查询
+
+前端页面以及对应请求接口已经设置完备，我们仅需据此添加对应的后端内容即可
+
+首先设置请求接收的实体类
+
+```java
+@Data
+public class RequestParams {
+    private String key;
+    private Integer page;
+    private Integer size;
+    private String sortBy;
+}
+```
+
+紧接着是返回给前端的响应类（字段名必须要和前端一致，否则你传递给前端的内容他不认）
+
+```java
+@Data
+public class PageResult {
+    private Long total;
+    private List<HotelDoc> hotels;
+
+    public PageResult() {
+    }
+
+    public PageResult(Long total, List<HotelDoc> hotels) {
+        this.total = total;
+        this.hotels = hotels;
+    }
+}
+```
+
+<br>
+
+新增查询的 controller
+
+```java
+@RestController
+@RequestMapping("/hotel")
+public class HotelController {
+    @Autowired
+    private IHotelService hotelService;
+
+    @PostMapping("/list")
+    PageResult search(@RequestBody RequestParams params) {
+        return hotelService.search(params);
+    }
+}
+```
+
+在对应的 service 中实现具体操作
+
+```java
+@Service
+public class HotelService extends ServiceImpl<HotelMapper, Hotel> implements IHotelService {
+    @Autowired
+    private RestHighLevelClient client;
+
+    @Override
+    public PageResult search(RequestParams params) {
+        try {
+            SearchRequest request = new SearchRequest("hotel");
+
+            // 判断请求是否包含指定params，以此来选择查询方式
+            String key = params.getKey();
+            if (key == null || "".equals(key)) {
+                request.source().query(QueryBuilders.matchAllQuery());
+            } else {
+                request.source().query(QueryBuilders.matchQuery("all", key));
+            }
+
+            // 分页
+            Integer page = params.getPage(), size = params.getSize();
+            request.source().from((page - 1) * size).size(size);
+
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+
+            return logResp(response);
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    // 此方法将包装从es中查询到的所有文档到对象PageResult内，然后作为响应返回前端
+    private PageResult logResp(SearchResponse response) {
+        SearchHits searchHits = response.getHits();
+        SearchHit[] hits = searchHits.getHits();
+        System.out.println(searchHits.getTotalHits().value + "条数据");
+
+        List<HotelDoc> hotelDocs = new ArrayList<>();
+        for (SearchHit hit : hits) {
+            String source = hit.getSourceAsString();
+            HotelDoc hotelDoc = JSON.parseObject(source, HotelDoc.class);
+            hotelDocs.add(hotelDoc);
+        }
+
+        return new PageResult(searchHits.getTotalHits().value, hotelDocs);
+    }
+}
+```
+
+<br>
+
+### 过滤功能

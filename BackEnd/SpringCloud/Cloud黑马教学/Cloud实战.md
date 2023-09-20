@@ -1896,3 +1896,77 @@ GET /hotel/_search
 <br>
 
 ### 搜索结果
+
+sort 排序
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "sort": [
+    {
+      "score": {
+        "order": "desc"
+      },
+      "price": {
+        "order": "asc"
+      }
+    }
+  ]
+}
+```
+
+<br>
+
+es 默认最多展示搜索结果前十位数据，展示更多数据需要使用分页功能
+
+分页查询存在两种方式：
+
+1. from+size：可随机翻页，检索数量最大 10000，会出现深度查询问题
+2. after+size：不可随机翻页，无检索上限，只能逐页查询
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 10, // 查询起始位，从第几个文档开始
+  "size": 20, // 期望获取多少个文档
+  "sort": [
+    {
+      "price": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
+<br>
+
+高亮
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "match": {
+      "name": "如家"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "name": {
+        "require_field_match": "false"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+### 用 RestClient 实现 DSL

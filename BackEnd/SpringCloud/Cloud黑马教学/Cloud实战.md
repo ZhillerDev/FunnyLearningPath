@@ -2167,3 +2167,72 @@ public class HotelService extends ServiceImpl<HotelMapper, Hotel> implements IHo
 <br>
 
 ### 过滤功能
+
+<br>
+
+## 聚合数据
+
+<br>
+
+### 聚合的分类
+
+聚合可以划分为三类
+
+![](../img/cloud-hm/h1.png)
+
+<br>
+
+### 桶查询
+
+使用 aggs 字段进行聚合查询，聚合查询的桶里面默认存在一个字段`“_count”`，用于表示寻找到的相同的数据量
+
+```json
+// GET请求示例，执行聚合查询
+GET /hotel/_search
+{
+	"size": 0, // 设置搜索结果的大小为0，只返回聚合结果
+	"aggs": {
+		"brandAgg": {
+			// 聚合名称为brandAgg
+			"terms": {
+				"field": "brand", // 根据brand字段进行分组
+				"order": {
+					"_count": "asc" // 按照聚合桶中文档数量的升序排序
+				},
+				"size": 20 // 返回前20个分组
+			}
+		}
+	}
+}
+```
+
+同样的，额外添加一个 query 字段，让我们将待查询的索引限定到一定范围内  
+这样可以避免查询全部索引的内存占用问题
+
+```json
+GET /hotel/_search
+{
+  // 只对价格200及以下的酒店进行统计
+  "query": {
+    "range": {
+      "price": {
+        "lte": 200
+      }
+    }
+  },
+  "size": 0,
+  "aggs": {
+    "brandAgg": {
+      "terms": {
+        "field": "brand",
+        "order": {
+          "_count": "asc"
+        },
+        "size": 20
+      }
+    }
+  }
+}
+```
+
+<br>

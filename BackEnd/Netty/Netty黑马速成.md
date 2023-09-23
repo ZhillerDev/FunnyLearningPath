@@ -299,3 +299,74 @@ Files.walkFileTree(path, new SimpleFileVisitor<Path>(){
     }
 });
 ```
+
+<br>
+
+### 网络编程
+
+#### 阻塞
+
+阻塞模式下，相关方法都会导致线程暂停
+
+- `ServerSocketChannel.accept` 会在没有连接建立时让线程暂停
+- `SocketChannel.read` 会在没有数据可读时让线程暂停
+- 阻塞的表现其实就是线程暂停了，暂停期间不会占用 cpu，但线程相当于闲置
+- 单线程下，阻塞方法之间相互影响，几乎不能正常工作，需要多线程支持
+
+<br>
+
+#### 非阻塞
+
+非阻塞模式下，相关方法都会不会让线程暂停
+
+- 在 `ServerSocketChannel.accept` 在没有连接建立时，会返回 null，继续运行
+- `SocketChannel.read` 在没有数据可读时，会返回 0，但线程不必阻塞，可以去执行其它 SocketChannel 的 read 或是去执行 ServerSocketChannel.accept
+- 写数据时，线程只是等待数据写入 Channel 即可，无需等 Channel 通过网络把数据发送出去
+- 阻塞模式下，即使没有连接建立，和可读数据，线程仍然在不断运行，白白浪费了 cpu
+
+非阻塞模式下的服务器端
+
+```java
+// 使用 nio 来理解非阻塞模式, 单线程
+// 0. ByteBuffer
+ByteBuffer buffer = ByteBuffer.allocate(16);
+// 1. 创建了服务器
+ServerSocketChannel ssc = ServerSocketChannel.open();
+ssc.configureBlocking(false); // 非阻塞模式
+// 2. 绑定监听端口
+ssc.bind(new InetSocketAddress(8080));
+// 3. 连接集合
+List<SocketChannel> channels = new ArrayList<>();
+while (true) {
+    // 4. accept 建立与客户端连接， SocketChannel 用来与客户端之间通信
+    SocketChannel sc = ssc.accept(); // 非阻塞，线程还会继续运行，如果没有连接建立，但sc是null
+    if (sc != null) {
+        log.debug("connected... {}", sc);
+        sc.configureBlocking(false); // 非阻塞模式
+        channels.add(sc);
+    }
+    for (SocketChannel channel : channels) {
+        // 5. 接收客户端发送的数据
+        int read = channel.read(buffer);// 非阻塞，线程仍然会继续运行，如果没有读到数据，read 返回 0
+        if (read > 0) {
+            buffer.flip();
+            debugRead(buffer);
+            buffer.clear();
+            log.debug("after read...{}", channel);
+        }
+    }
+}
+```
+
+<br>
+
+#### 多路复用
+
+Selector 能够保证
+
+- 有可连接事件时才去连接
+- 有可读事件才去读取
+- 有可写事件才去写入
+- 限于网络传输能力，Channel 未必时时可写，一旦 Channel 可写，会触发 Selector 的可写事件
+
+<br>

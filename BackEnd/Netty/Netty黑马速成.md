@@ -362,7 +362,7 @@ while (true) {
 
 #### 多路复用
 
-Selector 能够保证
+`Selector` 能够保证
 
 - 有可连接事件时才去连接
 - 有可读事件才去读取
@@ -370,3 +370,114 @@ Selector 能够保证
 - 限于网络传输能力，Channel 未必时时可写，一旦 Channel 可写，会触发 Selector 的可写事件
 
 <br>
+
+`绑定 Channel 事件` 也称之为注册事件，绑定的事件 selector 才会关心
+
+```java
+channel.configureBlocking(false);
+SelectionKey key = channel.register(selector, 绑定事件);
+```
+
+- channel 必须工作在非阻塞模式
+- FileChannel 没有非阻塞模式，因此不能配合 selector 一起使用
+- 绑定的事件类型可以有
+  - connect - 客户端连接成功时触发
+  - accept - 服务器端成功接受连接时触发
+  - read - 数据可读入时触发，有因为接收能力弱，数据暂不能读入的情况
+  - write - 数据可写出时触发，有因为发送能力弱，数据暂不能写出的情况
+
+<br>
+
+#### 处理 read 事件
+
+> 事件发生后，要么处理，要么取消（cancel），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是水平触发
+
+```java
+@Slf4j
+public class ChannelDemo6 {
+    public static void main(String[] args) {
+        try (ServerSocketChannel channel = ServerSocketChannel.open()) {
+            channel.bind(new InetSocketAddress(8080));
+            System.out.println(channel);
+            Selector selector = Selector.open();
+
+            // 设置channel为非阻塞模式
+            channel.configureBlocking(false);
+            // 绑定channel事件
+            channel.register(selector, SelectionKey.OP_ACCEPT);
+
+            while (true) {
+                int count = selector.select();
+//                int count = selector.selectNow();
+                log.debug("select count: {}", count);
+//                if(count <= 0) {
+//                    continue;
+//                }
+
+                // 获取所有事件
+                Set<SelectionKey> keys = selector.selectedKeys();
+
+                // 遍历所有事件，逐一处理
+                Iterator<SelectionKey> iter = keys.iterator();
+                while (iter.hasNext()) {
+                    SelectionKey key = iter.next();
+                    // 判断事件类型
+                    if (key.isAcceptable()) {
+                        ServerSocketChannel c = (ServerSocketChannel) key.channel();
+                        // 必须处理
+                        SocketChannel sc = c.accept();
+                        sc.configureBlocking(false);
+                        sc.register(selector, SelectionKey.OP_READ);
+                        log.debug("连接已建立: {}", sc);
+                    } else if (key.isReadable()) {
+                        SocketChannel sc = (SocketChannel) key.channel();
+                        ByteBuffer buffer = ByteBuffer.allocate(128);
+                        int read = sc.read(buffer);
+                        if(read == -1) {
+                            key.cancel();
+                            sc.close();
+                        } else {
+                            buffer.flip();
+                            debug(buffer);
+                        }
+                    }
+
+                    // 处理完毕，必须将事件移除
+                    // 否则下次触发ssckey上的read事件，就会爆空指针异常
+                    iter.remove();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+<br>
+
+如何处理消息的边界范围？
+
+1. 一种思路是固定消息长度，数据包大小一样，服务器按预定长度读取，缺点是浪费带宽
+2. 另一种思路是按分隔符拆分，缺点是效率低
+3. TLV 格式，即 Type 类型、Length 长度、Value 数据，类型和长度已知的情况下，就可以方便获取消息大小，分配合适的 buffer，缺点是 buffer 需要提前分配，如果内容过大，则影响 server 吞吐量
+
+- Http 1.1 是 TLV 格式
+- Http 2.0 是 LTV 格式
+
+<br>
+
+如何智能的分配 bytebuffer？
+
+- 一种思路是首先分配一个较小的 buffer，例如 4k，如果发现数据不够，再分配 8k 的 buffer，将 4k buffer 内容拷贝至 8k buffer
+- 另一种思路是用多个数组组成 buffer，一个数组不够，把多出来的内容写入新的数组
+
+> 因为 Channel 与 ByteBuffer 是一对一的关系，故需要为每个 channel 维护一个独立的 ByteBuffer，所以需要使用上述两种方式来解决这个问题
+
+<br>
+
+#### 处理 write 事件
+
+<br>
+
+### NIO && BIO

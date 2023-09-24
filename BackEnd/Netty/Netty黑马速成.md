@@ -834,3 +834,60 @@ channelFuture.addListener((ChannelFutureListener) future -> {
 <br>
 
 **CloseFuture**
+
+用于监听处理 channel 关闭后应该执行的操作
+
+```java
+@Slf4j
+public class CloseFutureClient {
+    public static void main(String[] args) throws InterruptedException {
+        NioEventLoopGroup group new NioEventLoopGroup();
+        ChannelFuture channelFuture = new Bootstrap()
+                .group(group)
+                .channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override // 在连接建立后被调用
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+                        ch.pipeline().addLast(new StringEncoder());
+                    }
+                })
+                .connect(new InetSocketAddress("localhost", 8080));
+        Channel channel = channelFuture.sync().channel();
+        log.debug("{}", channel);
+        new Thread(()->{
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                String line = scanner.nextLine();
+                if ("q".equals(line)) {
+                    channel.close(); // close 异步操作 1s 之后
+//                    log.debug("处理关闭之后的操作"); // 不能在这里善后
+                    break;
+                }
+                channel.writeAndFlush(line);
+            }
+        }, "input").start();
+
+        // 获取 CloseFuture 对象， 1) 同步处理关闭， 2) 异步处理关闭
+        ChannelFuture closeFuture = channel.closeFuture();
+        /*log.debug("waiting close...");
+        closeFuture.sync();
+        log.debug("处理关闭之后的操作");*/
+        closeFuture.addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                log.debug("处理关闭之后的操作");
+                group.shutdownGracefully();
+            }
+        });
+    }
+}
+```
+
+<br>
+
+#### Future & Promise
+
+<br>
+
+### 双向通信

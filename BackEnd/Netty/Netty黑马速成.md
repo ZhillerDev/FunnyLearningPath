@@ -686,3 +686,151 @@ public class HelloClient {
 ### 组件入门
 
 #### EventLoop
+
+`EventLoop` 本质是一个单线程执行器（同时维护了一个 Selector），里面有 run 方法处理 Channel 上源源不断的 io 事件
+
+`EventLoopGroup` 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 register 方法来绑定其中一个 EventLoop，后续这个 Channel 上的 io 事件都由此 EventLoop 来处理（保证了 io 事件处理时的线程安全）
+
+请看下面这个简单的 `EventLoopGroup` 示例
+
+```java
+public class EventGroupSingle {
+    public static void main(String[] args) {
+        EventLoopGroup loopGroup = new NioEventLoopGroup(2);  // 创建一个包含两个线程的事件循环组
+
+        loopGroup.next().submit(() -> {
+            try {
+                Thread.sleep(1000);  // 使当前线程休眠1秒钟
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.out.println("this thread is running now");  // 输出线程执行信息
+        });
+
+        loopGroup.next().scheduleAtFixedRate(() -> {
+            System.out.println("2 seconds");  // 每隔2秒输出一条消息
+        }, 0, 2, TimeUnit.SECONDS);  // 初始延迟为0秒，之后每隔2秒执行一次任务
+
+        System.out.println("over");  // 输出 "over"
+    }
+}
+```
+
+<br>
+
+**io 处理**
+
+> boss 只负责 ServerSocketChannel 上的 accept 事件  
+> worker 只负责 socketChannel 上的读写
+
+`group` 内设置一个 `boss` 和两个 `worker` ，它们均使用 NIO 事件循环组  
+其中没连接一个新的客户端，其中的一个 worker 就会与该 channel 执行绑定，直到该 channel 关闭后，下一个新客户端链接了就会派出另一个 worker 受理该 channel
+
+所以两个 worker 之间对 channel 一对一绑定，且轮流交换处理各自的 channel
+
+其他代码请看注释，基本一样，都是接收客户端传来的数据然后输出
+
+```java
+new ServerBootstrap()  // 创建ServerBootstrap实例，用于配置和启动服务器
+    .group(new NioEventLoopGroup(1), new NioEventLoopGroup(2))  // 1. 创建boss线程组和worker线程组，boss线程组包含1个线程，worker线程组包含2个线程
+
+    .channel(NioServerSocketChannel.class)  // 2. 指定服务端的Channel类型为NioServerSocketChannel
+    .childHandler(new ChannelInitializer<NioSocketChannel>() {  // 3. 配置客户端连接的处理器
+        @Override
+        protected void initChannel(NioSocketChannel ch) {
+            ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {  // 4. 添加ChannelInboundHandlerAdapter，用于处理接收到的消息
+                @Override
+                public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                    ByteBuf byteBuf = msg instanceof ByteBuf ? ((ByteBuf) msg) : null;  // 判断接收到的消息是否为ByteBuf类型
+                    if (byteBuf != null) {
+                        byte[] buf = new byte[16];
+                        ByteBuf len = byteBuf.readBytes(buf, 0, byteBuf.readableBytes());  // 读取ByteBuf中的数据到buf数组
+                        log.debug(new String(buf));  // 输出读取到的数据
+                    }
+                }
+            });
+        }
+    })
+    .bind(8080)  // 5. 绑定服务器端口为8080，启动服务器，开始监听客户端的连接请求
+    .sync();  // 阻塞等待服务器启动完成
+```
+
+<br>
+
+**handler 换人**
+
+`Handler` 换人是为了避免在当前线程中执行耗时的操作和确保多线程环境下的线程安全
+
+当 Handler 的事件循环与当前事件循环不在同一个线程中时，需要将要执行的代码切换到下一个事件循环的线程中执行，即执行 Handler 换人
+
+执行 handler 换人的简要代码：
+
+```java
+static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
+    final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
+    // 下一个 handler 的事件循环是否与当前的事件循环是同一个线程
+    EventExecutor executor = next.executor();
+
+    // 是，直接调用
+    if (executor.inEventLoop()) {
+        next.invokeChannelRead(m);
+    }
+    // 不是，将要执行的代码作为任务提交给下一个事件循环处理（换人）
+    else {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                next.invokeChannelRead(m);
+            }
+        });
+    }
+}
+```
+
+> NioEventLoop 一样可以处理普通任务（使用 execute），或者执行定时任务
+
+<br>
+
+#### Channel
+
+channel 的主要作用
+
+- `close()` 可以用来关闭 channel
+- `closeFuture()` 用来处理 channel 的关闭
+  - sync 方法作用是同步等待 channel 关闭
+  - 而 addListener 方法是异步等待 channel 关闭
+- `pipeline()` 方法添加处理器
+- `write()` 方法将数据写入
+- `writeAndFlush()` 方法将数据写入并刷出
+
+<br>
+
+**ChannelFuture**
+
+`Bootstrap` 返回的是 `ChannelFuture` 对象，它的作用是利用 channel() 方法来获取 Channel 对象
+
+connect 方法是异步的，意味着不等连接建立，方法执行就返回了。因此 channelFuture 对象中不能【立刻】获得到正确的 Channel 对象
+
+而下方代码中的 `ChannelFutureListener` 会在连接建立时被调用（其中 operationComplete 方法），此时就可以拿到正确的 channel 对象了
+
+```java
+ChannelFuture channelFuture = new Bootstrap()
+    .group(new NioEventLoopGroup())
+    .channel(NioSocketChannel.class)
+    .handler(new ChannelInitializer<Channel>() {
+        @Override
+        protected void initChannel(Channel ch) {
+            ch.pipeline().addLast(new StringEncoder());
+        }
+    })
+    .connect("127.0.0.1", 8080);
+System.out.println(channelFuture.channel()); // 1
+
+channelFuture.addListener((ChannelFutureListener) future -> {
+    System.out.println(future.channel()); // 2
+});
+```
+
+<br>
+
+**CloseFuture**

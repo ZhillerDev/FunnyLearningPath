@@ -911,4 +911,141 @@ netty 中的 Future 与 jdk 中的 Future 同名，但是是两个接口，netty
 
 <br>
 
+**jdk future**
+
+> future 接口最重要的一个作用就是：异步计算，Future 允许你提交一个任务（Callable 或 Runnable）并在后台进行异步计算。它提供了一种将任务提交给执行器（Executor）或线程池进行处理的方式，而不需要等待计算完成。
+
+一个最简单的展示 JDK 原生 future 的案例
+
+```java
+public class TestJdkFuture {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        ExecutorService service = Executors.newFixedThreadPool(2);
+        Future<Integer> future = service.submit(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                Thread.sleep(1000);
+                return 1000;
+            }
+        });
+        System.out.println(future.get());
+    }
+}
+```
+
+<br>
+
+**netty future**
+
+```java
+public class TestNettyFuture {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        NioEventLoopGroup group = new NioEventLoopGroup();
+        EventLoop loop = group.next();
+
+        // 定义一个基于NIO的future对象
+        Future<Integer> future = loop.submit(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                Thread.sleep(1000);
+                return 12031;
+            }
+        });
+
+        // 添加future监听器，用于处理计算完毕后需要执行的事件
+        future.addListener(new GenericFutureListener<Future<? super Integer>>() {
+            @Override
+            public void operationComplete(Future<? super Integer> future) throws Exception {
+                System.out.println("任务完成啦！" + future.getNow());
+            }
+        });
+    }
+}
+```
+
+<br>
+
+**netty promise**
+
+```java
+public class TestNettyPromise {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        EventLoop loop = new NioEventLoopGroup().next(); // 创建一个事件循环实例
+        DefaultPromise<Integer> promise = new DefaultPromise<>(loop); // 创建一个DefaultPromise，并关联到事件循环
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000); // 模拟一个耗时操作，暂停当前线程1秒钟
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            promise.setSuccess(123); // 设置Promise的结果为成功，并设置结果值为123
+        }).start();
+
+        System.out.println("结果是：" + promise.get()); // 获取Promise的结果，如果结果还未完成，则会阻塞等待，直到结果完成后返回结果值
+    }
+}
+```
+
+<br>
+
+#### Handler & Pipeline
+
+`ChannelHandler` 用来处理 `Channel` 上的各种事件，分为入站、出站两种。所有 ChannelHandler 被连成一串，就是 `Pipeline`
+
+- 入站处理器通常是 `ChannelInboundHandlerAdapter` 的子类，主要用来读取客户端数据，写回结果
+- 出站处理器通常是 `ChannelOutboundHandlerAdapter` 的子类，主要对写回结果进行加工
+
+下面代码展示了两个输出适配器的操作
+
+ChannelInboundHandlerAdapter 是按照 addLast 的`顺序`执行的  
+ChannelOutboundHandlerAdapter 是按照 addLast 的`逆序`执行的
+
+```java
+public class TestChannelHandler {
+    public static void main(String[] args) throws InterruptedException {
+        ChannelFuture channelFuture = new ServerBootstrap()
+                .group(new NioEventLoopGroup())
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                            @Override
+                            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                System.out.println(1);
+                                ctx.fireChannelRead(msg);
+                            }
+                        });
+                        ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                            @Override
+                            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                System.out.println(2);
+                                ctx.fireChannelRead(msg);
+                            }
+                        });
+
+                        ch.pipeline().addLast(new ChannelOutboundHandlerAdapter() {
+                            @Override
+                            public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+                                System.out.println(3);
+                                ctx.write(msg, promise);
+                            }
+                        });
+                        ch.pipeline().addLast(new ChannelOutboundHandlerAdapter() {
+                            @Override
+                            public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+                                System.out.println(4);
+                                ctx.write(msg, promise);
+                            }
+                        });
+                    }
+
+                }).bind(8083);
+    }
+}
+```
+
+<br>
+
 ### 双向通信

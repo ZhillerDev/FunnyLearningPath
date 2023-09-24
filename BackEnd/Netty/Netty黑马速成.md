@@ -543,3 +543,146 @@ DirectByteBuf 优化
 <br>
 
 ### AIO
+
+![](./img/netty-hm/n3.png)
+
+AIO 用来解决数据复制阶段的阻塞问题
+
+- 同步意味着，在进行读写操作时，线程需要等待结果，还是相当于闲置
+- 异步意味着，在进行读写操作时，线程不必等待结果，而是将来由操作系统来通过回调方式由另外的线程来获得结果
+
+<br>
+
+```java
+@Slf4j
+public class AioDemo1 {
+    public static void main(String[] args) throws IOException {
+        try{
+            AsynchronousFileChannel s =
+                AsynchronousFileChannel.open(
+                	Paths.get("1.txt"), StandardOpenOption.READ);
+            ByteBuffer buffer = ByteBuffer.allocate(2);
+            log.debug("begin...");
+            s.read(buffer, 0, null, new CompletionHandler<Integer, ByteBuffer>() {
+                @Override
+                public void completed(Integer result, ByteBuffer attachment) {
+                    log.debug("read completed...{}", result);
+                    buffer.flip();
+                    debug(buffer);
+                }
+
+                @Override
+                public void failed(Throwable exc, ByteBuffer attachment) {
+                    log.debug("read failed...");
+                }
+            });
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        log.debug("do other things...");
+        System.in.read();
+    }
+}
+```
+
+> 默认文件 AIO 使用的线程都是守护线程，所以最后要执行 `System.in.read()` 以避免守护线程意外结束
+
+<br>
+
+## Netty 入门
+
+<br>
+
+### HelloWorld
+
+#### 服务器端
+
+代码清单：`/test/netty/HelloServer.java`
+
+```java
+public class HelloServer {
+    public static void main(String[] args) {
+        new ServerBootstrap()  // 创建ServerBootstrap实例，用于配置和启动服务器
+                .group(new NioEventLoopGroup())  // 1. 创建boss线程组，用于接受客户端连接请求
+                .channel(NioServerSocketChannel.class)  // 2. 指定服务端的Channel类型为NioServerSocketChannel
+                .childHandler(new ChannelInitializer<NioSocketChannel>() {  // 3. 配置客户端连接的处理器
+                    protected void initChannel(NioSocketChannel ch) {
+                        ch.pipeline().addLast(new StringDecoder());  // 5. 添加StringDecoder，用于将接收到的ByteBuf解码为String
+                        ch.pipeline().addLast(new SimpleChannelInboundHandler<String>() {  // 6. 添加自定义的SimpleChannelInboundHandler，用于处理String类型的消息
+                            @Override
+                            protected void channelRead0(ChannelHandlerContext ctx, String msg) {
+                                System.out.println(msg);  // 在控制台输出接收到的消息
+                            }
+                        });
+                    }
+                })
+                .bind(8080);  // 4. 绑定服务器端口为8080
+    }
+}
+```
+
+代码解读
+
+- 1 处，创建 NioEventLoopGroup，可以简单理解为 `线程池 + Selector`
+- 2 处，选择服务 Scoket 实现类，其中 NioServerSocketChannel 表示基于 NIO 的服务器端实现
+- 3 处，为啥方法叫 childHandler，是接下来添加的处理器都是给 SocketChannel 用的，而不是给 ServerSocketChannel。ChannelInitializer 处理器（仅执行一次），它的作用是待客户端 SocketChannel 建立连接后，执行 initChannel 以便添加更多的处理器
+- 4 处，ServerSocketChannel 绑定的监听端口
+- 5 处，SocketChannel 的处理器，解码 ByteBuf => String
+- 6 处，SocketChannel 的业务处理器，使用上一个处理器的处理结果
+
+<br>
+
+#### 客户端
+
+代码清单：`/test/netty/HelloClient.java`
+
+```java
+public class HelloClient {
+    public static void main(String[] args) throws InterruptedException {
+        new Bootstrap()  // 创建Bootstrap实例，用于配置和启动客户端
+                .group(new NioEventLoopGroup())  // 1. 创建线程组，用于处理I/O操作
+                .channel(NioSocketChannel.class)  // 2. 指定客户端的Channel类型为NioSocketChannel
+                .handler(new ChannelInitializer<Channel>() {  // 3. 配置客户端的处理器
+                    @Override
+                    protected void initChannel(Channel ch) {
+                        ch.pipeline().addLast(new StringEncoder());  // 8. 添加StringEncoder，用于将String编码为ByteBuf
+                    }
+                })
+                .connect("127.0.0.1", 8080)  // 4. 连接服务器的IP地址和端口号
+                .sync()  // 5. 等待连接成功
+                .channel()  // 6. 获取连接成功的Channel对象
+                .writeAndFlush(new Date() + ": hello world!");  // 7. 向服务器发送消息
+    }
+}
+```
+
+代码解读
+
+- 1 处，创建 NioEventLoopGroup，同 Server
+- 2 处，选择客户 Socket 实现类，NioSocketChannel 表示基于 NIO 的客户端实现
+- 3 处，添加 SocketChannel 的处理器，ChannelInitializer 处理器（仅执行一次），它的作用是待客户端 SocketChannel 建立连接后，执行 initChannel 以便添加更多的处理器
+- 4 处，指定要连接的服务器和端口
+- 5 处，Netty 中很多方法都是异步的，如 connect，这时需要使用 sync 方法等待 connect 建立连接完毕
+- 6 处，获取 channel 对象，它即为通道抽象，可以进行数据读写操作
+- 7 处，写入消息并清空缓冲区
+- 8 处，消息会经过通道 handler 处理，这里是将 String => ByteBuf 发出
+- 数据经过网络传输，到达服务器端，服务器端 5 和 6 处的 handler 先后被触发，走完一个流程
+
+<br>
+
+#### 上述流程人话解释
+
+- channel 为数据的通道
+- msg 为不断流动的数据，他会被 pipeline 处理
+- handler 为数据的处理工序
+- 工序有多道，合在一起就是 pipeline，pipeline 负责发布事件传播给每个 handler；handler 随意选择事件进行处理
+- eventLoop 理解为处理数据的工人
+- 工人可以管理多个 channel 的 io 操作，并且一旦工人负责了某个 channel，就要负责到底（绑定）
+- 工人按照 pipeline 顺序，依次按照 handler 的规划（代码）处理数据，可以为每道工序指定不同的工人
+
+<br>
+
+### 组件入门
+
+#### EventLoop

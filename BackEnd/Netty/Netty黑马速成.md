@@ -1098,4 +1098,88 @@ System.out.println(ByteBufUtil.prettyHexDump(slice));
 
 <br>
 
+`CompositeByteBuf` ：零拷贝的体现之一，可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf，避免拷贝
+
+```java
+ByteBuf buf3 = ByteBufAllocator.DEFAULT
+    .buffer(buf1.readableBytes()+buf2.readableBytes());
+buf3.writeBytes(buf1);
+buf3.writeBytes(buf2);
+System.out.println(ByteBufUtil.prettyHexDump(buf3));
+```
+
+<br>
+
 ### 双向通信
+
+实现一个 echo server
+
+编写 server
+
+```java
+new ServerBootstrap()
+    .group(new NioEventLoopGroup())
+    .channel(NioServerSocketChannel.class)
+    .childHandler(new ChannelInitializer<NioSocketChannel>() {
+        @Override
+        protected void initChannel(NioSocketChannel ch) {
+            ch.pipeline().addLast(new ChannelInboundHandlerAdapter(){
+                @Override
+                public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                    ByteBuf buffer = (ByteBuf) msg;
+                    System.out.println(buffer.toString(Charset.defaultCharset()));
+
+                    // 建议使用 ctx.alloc() 创建 ByteBuf
+                    ByteBuf response = ctx.alloc().buffer();
+                    response.writeBytes(buffer);
+                    ctx.writeAndFlush(response);
+
+                    // 思考：需要释放 buffer 吗
+                    // 思考：需要释放 response 吗
+                }
+            });
+        }
+    }).bind(8080);
+```
+
+编写 client
+
+```java
+NioEventLoopGroup group = new NioEventLoopGroup();
+Channel channel = new Bootstrap()
+    .group(group)
+    .channel(NioSocketChannel.class)
+    .handler(new ChannelInitializer<NioSocketChannel>() {
+        @Override
+        protected void initChannel(NioSocketChannel ch) throws Exception {
+            ch.pipeline().addLast(new StringEncoder());
+            ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                @Override
+                public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                    ByteBuf buffer = (ByteBuf) msg;
+                    System.out.println(buffer.toString(Charset.defaultCharset()));
+
+                    // 思考：需要释放 buffer 吗
+                }
+            });
+        }
+    }).connect("127.0.0.1", 8080).sync().channel();
+
+channel.closeFuture().addListener(future -> {
+    group.shutdownGracefully();
+});
+
+new Thread(() -> {
+    Scanner scanner = new Scanner(System.in);
+    while (true) {
+        String line = scanner.nextLine();
+        if ("q".equals(line)) {
+            channel.close();
+            break;
+        }
+        channel.writeAndFlush(line);
+    }
+}).start();
+```
+
+<br>

@@ -4,7 +4,7 @@
 
 ### RestTemplate
 
-RestTemplate 可以模拟客户端来向另外一个后端执行请求
+`RestTemplate` 可以模拟客户端来向另外一个后端执行请求
 
 黑马给出的微服务项目中，有两个 boot 项目，分别是 order 与 user
 

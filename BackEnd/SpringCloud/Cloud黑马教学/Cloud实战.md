@@ -1293,7 +1293,7 @@ windows 下安装非常简单，把三个压缩包全部解压到一个非中文
 
 按照下图格式，我们使用 ik 智能分词器对一行包含汉语和英语的文字执行了分词操作
 
-![](../img/cloud-hm/h21.png.png)
+![](../img/cloud-hm/h21.png)
 
 ```json
 POST _analyze
@@ -2346,7 +2346,7 @@ GET /myindex/_search
 
 聚合可以划分为三类
 
-![](../img/cloud-hm/h1.png)
+![](../img/cloud-hm/h23.png)
 
 <br>
 
